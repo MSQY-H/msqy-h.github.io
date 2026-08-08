@@ -1,0 +1,417 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><title>2FA 与 TOTP：更好地保护你的账号 | MSQY's Blog</title><noscript>开启JavaScript才能访问本站哦~</noscript><link rel="icon" href="/img/pwa/favicon.ico"><link rel="stylesheet" href="/css/index.css?v=4.0.0"><link rel="canonical" href="https://msqy-h.github.io/2026/07/05/2fa/"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css"><!-- Feature-specific CSS--><!-- aplayer--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css"><!-- swiper--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11.0.5/swiper-bundle.min.css"><!-- fancybox ui--><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.36/dist/fancybox/fancybox.min.css"><!-- katex--><!-- Open Graph--><meta name="description" content="2FA 简明开启教程"><!-- pwa--><meta name="apple-mobile-web-app-capable" content="MSQY's Blog"><meta name="theme-color" content="var(--efu-main)"><meta name="apple-mobile-web-app-status-bar-style" content="var(--efu-main)"><link rel="bookmark" href="/img/pwa/favicon.ico"><link rel="apple-touch-icon" href="/img/pwa/favicon.ico" sizes="180x180"><script>console.log(' %c Solitude %c ' + '4.0.0' + ' %c https://github.com/everfu/hexo-theme-solitude',
+    'background:#35495e ; padding: 1px; border-radius: 3px 0 0 3px;  color: #fff',
+    'background:#ff9a9a ; padding: 1px; border-radius: 0 3px 3px 0;  color: #fff',
+    'background:unset ; padding: 1px; border-radius: 0 3px 3px 0;  color: #fff')
+</script><link rel="stylesheet" type="text/css" crossorigin="" href="https://font.kivo.wiki/Blueaka/Blueaka.css"><link rel="stylesheet" type="text/css" crossorigin="" href="https://font.kivo.wiki/Blueaka_Bold/Blueaka_Bold.css"><link href="https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css" rel="stylesheet"><script type="text/javascript"> (function(c,l,a,r,i,t,y){ c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)}; t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i; y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y); })(window, document, "clarity", "script", "xiluly2svi"); </script><link rel="stylesheet" href="/schedule/schedule.css"><script>(()=>{
+        const parseConfig = (id) => {
+            const element = document.getElementById(id)
+            if (!element) return {}
+            try {
+                return JSON.parse(element.content?.textContent || element.textContent || '{}')
+            } catch (error) {
+                console.error('Invalid Solitude config:', error)
+                return {}
+            }
+        }
+        const saveToLocal = {
+            set: function setWithExpiry(key, value, ttl) {
+                if (ttl === 0)
+                    return
+                const now = new Date()
+                const expiryDay = ttl * 86400000
+                const item = {
+                    value: value,
+                    expiry: now.getTime() + expiryDay
+                }
+                localStorage.setItem(key, JSON.stringify(item))
+            },
+            get: function getWithExpiry(key) {
+                const itemStr = localStorage.getItem(key)
+
+                if (!itemStr) {
+                    return undefined
+                }
+                let item
+                try {
+                    item = JSON.parse(itemStr)
+                } catch (error) {
+                    localStorage.removeItem(key)
+                    return undefined
+                }
+                const now = new Date()
+
+                if (now.getTime() > item.expiry) {
+                    localStorage.removeItem(key)
+                    return undefined
+                }
+                return item.value
+            }
+        };
+        const resourceRequests = new Map()
+        const loadResource = (url, create) => {
+            const absoluteUrl = new URL(url, document.baseURI).href
+            if (resourceRequests.has(absoluteUrl)) return resourceRequests.get(absoluteUrl)
+            const request = new Promise((resolve, reject) => {
+                const element = create(absoluteUrl)
+                element.addEventListener('load', () => resolve(element), {once: true})
+                element.addEventListener('error', () => {
+                    resourceRequests.delete(absoluteUrl)
+                    reject(new Error('Unable to load ' + absoluteUrl))
+                }, {once: true})
+                document.head.appendChild(element)
+            })
+            resourceRequests.set(absoluteUrl, request)
+            return request
+        }
+        const api = window.Solitude || {}
+        window.Solitude = api
+        api.installLegacyAdapter = () => {
+            const aliases = {
+                utils: api,
+                sco: api,
+                GLOBAL_CONFIG: api.config
+            }
+            Object.entries(aliases).forEach(([name, value]) => {
+                if (name in window) return
+                Object.defineProperty(window, name, {
+                    configurable: true,
+                    enumerable: false,
+                    value
+                })
+            })
+        }
+        Object.defineProperties(api, {
+            config: {configurable: true, get: () => parseConfig('site-config')},
+            page: {configurable: true, get: () => parseConfig('config-diff')}
+        })
+        Object.assign(api, {
+            saveToLocal: saveToLocal,
+            loadStyle: (url, options = {}) => loadResource(url, href => {
+                const link = document.createElement('link')
+                link.rel = 'stylesheet'
+                link.href = href
+                if (options.id) link.id = options.id
+                return link
+            }),
+            loadScript: (url, options = {}) => {
+              if (url.includes('barrage')) api.installLegacyAdapter()
+              return loadResource(url, src => {
+                const script = document.createElement('script')
+                script.src = src
+                script.async = options.async !== false
+                Object.entries(options.attributes || {}).forEach(([key, value]) => script.setAttribute(key, value))
+                return script
+              })
+            },
+            addGlobalFn: (key, fn, name = false, parent = window) => {
+                const globalFn = parent.globalFn || {}
+                const keyObj = globalFn[key] || {}
+
+                if (name && keyObj[name]) return
+
+                name = name || Object.keys(keyObj).length
+                keyObj[name] = fn
+                globalFn[key] = keyObj
+                parent.globalFn = globalFn
+            },
+            addEventListenerPjax: (ele, event, fn, option = false) => {
+              ele.addEventListener(event, fn, option)
+              api.addGlobalFn('pjax', () => {
+                  ele.removeEventListener(event, fn, option)
+              })
+            },
+            diffDateFormat: (selector) => {
+                selector.forEach(item => {
+                    const date = new Date(item.getAttribute('datetime') || item.textContent);
+                    item.textContent = (date.getMonth() + 1).toString()+'/'+date.getDate().toString();
+                });
+            },
+        })
+        api.getCSS = (url, id = false) => api.loadStyle(url, {id})
+        api.getScript = (url, attr = {}) => api.loadScript(url, {attributes: attr})
+        api.on = (name, handler) => {
+            const eventName = 'solitude:' + name
+            document.addEventListener(eventName, handler)
+            return () => document.removeEventListener(eventName, handler)
+        }
+        api.navigate = url => api.pjax?.loadUrl ? api.pjax.loadUrl(url) : window.location.assign(url)
+    })()</script><!-- theme--><script>initTheme = () => {
+    let isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const cachedMode = Solitude.saveToLocal.get('theme');
+    if (cachedMode === undefined) {
+        const nowMode =
+            isDarkMode ? 'dark' : 'light'
+        document.documentElement.setAttribute('data-theme', nowMode);
+    } else {
+        document.documentElement.setAttribute('data-theme', cachedMode);
+    }
+    Solitude.rightMenu?.mode(cachedMode === 'dark' && isDarkMode)
+}
+initTheme()</script><template id="site-config">{"root":"/","algolia":null,"localsearch":{"preload":true,"path":"search.xml"},"runtime":"2026-06-12 00:00:00","lazyload":{"enable":true,"error":"/img/error_load.avif"},"copyright":false,"highlight":{"limit":200,"expand":true,"copy":true,"syntax":"highlight.js"},"friend_links":{"async":false,"path":"/links.json","total":4,"placeholder":"","default_avatar":"/img/default_avatar.avif","more_url":"/links/","loading":"正在加载友链...","error":"友链加载失败，请稍后重试。","retry":"重新加载","random":"点击前往按钮进入随机一个友链，不保证跳转网站的安全性和可用性。本次随机到的是本站友链：⌈ ${name} ⌋","to":"前往","more":"更多","default_sort":"默认排序","random_sort":"随机排序","sort_label":"切换排序方式","scroll_left":"向左滚动","scroll_right":"向右滚动"},"random_posts":["2026/08/05/native-music/","2026/07/26/termux-neovim/","2026/07/25/termux-zsh/","2026/07/14/minecraft-rtx/","2026/07/12/hexo-lazyload/","2026/07/10/hexo-preview/","2026/07/06/hexo-image/","2026/07/05/2fa/","2026/06/12/test/"],"randomlink":true,"feature_modules":{"search":"local","post_ai":true,"friend_links":true,"music":true,"right_menu":false,"translate":false,"covercolor":"local"},"lang":{"theme":{"dark":"已切换至深色模式","light":"已切换至浅色模式"},"copy":{"success":"复制成功","error":"复制失败"},"backtop":"返回顶部","time":{"day":"天前","hour":"小时前","just":"刚刚","min":"分钟前","month":"个月前"},"day":" 天","f12":"开发者模式已打开，请遵循GPL协议。","totalk":"无需删除空行，直接输入评论即可","search":{"empty":"找不到你查询的内容：${query}","hit":"找到 ${hits} 条结果，用时 ${time} 毫秒","placeholder":"输入关键词快速查找","count":"共 \u003cb&gt;${count}\u003c/b&gt; 条结果。","loading":"搜索中..."}},"aside":{"state":{"morning":"✨早上好","noon":"🍲中午好","afternoon":"🌞下午好","night":"🌕晚上好","goodnight":"💤晚安"},"witty_words":[555,666,777],"witty_comment":{"prefix":"好久不见，","back":"欢迎再次回来，"}},"covercolor":{"enable":true,"mode":"local","api":"https://api.qjqq.cn/api/Imgcolor?img=","time":43200000},"comment":false,"lightbox":"fancybox","right_menu":false,"translate":false,"lure":false,"expire":{"time":30,"position":"top","text_prev":"本文已于 ","text_next":" 天前过时，如果内容不匹配，请联系站长更新。"}}</template><template id="config-diff">{"is_post":true,"is_page":false,"is_home":false,"page":"post","toc":true,"comment":true,"ai_text":"本文通俗介绍 2FA （双因子认证），推荐 TOTP 方式，以 GitHub 为例演示开启步骤，强调保存恢复代码。提醒 2FA 非绝对安全，需注意上网习惯。适合小白上手。","color":false}</template><meta name="generator" content="Hexo 8.1.2"><link rel="alternate" href="/rss2.xml" title="MSQY's Blog" type="application/rss+xml">
+</head><body id="body"><div><div id="loading-box" data-solitude-action="endLoading" style="zoom:1"><div class="loading-bg"><img class="loading-img nolazyload" src="/img/loading.webp" alt="loading image"></div></div></div><div><div id="console"><div class="console-content"><div class="console-card-group" data-solitude-action="onConsoleCardGroupClick" data-solitude-event="true"><div class="console-card-group-right"><div class="console-card tags" data-solitude-action="hideConsole"><div class="card-content"><div class="author-content-item-tips">标签</div><div class="author-content-item-title">寻找感兴趣的领域</div></div><div class="card-tag-cloud"><a href="/tags/2FA/">2FA<sup>1</sup></a><a href="/tags/%E5%AE%89%E5%85%A8/">安全<sup>1</sup></a><a href="/tags/Hexo/">Hexo<sup>4</sup></a><a href="/tags/Solitude/">Solitude<sup>4</sup></a><a href="/tags/Minecraft/">Minecraft<sup>1</sup></a><a href="/tags/%E8%A7%86%E8%A7%89/">视觉<sup>1</sup></a><a href="/tags/%E9%9F%B3%E4%B9%90/">音乐<sup>1</sup></a><a href="/tags/Termux/">Termux<sup>2</sup></a><a href="/tags/%E7%BB%88%E7%AB%AF/">终端<sup>2</sup></a></div></div><div class="console-card history" data-solitude-action="hideConsole"><ul class="card-archive-list"><li class="item"><a href="/archives/2026/08/"><span class="date">2026/08</span><div class="count-group"><span class="count">1</span><span class="unit">篇</span></div></a></li><li class="item"><a href="/archives/2026/07/"><span class="date">2026/07</span><div class="count-group"><span class="count">7</span><span class="unit">篇</span></div></a></li><li class="item"><a href="/archives/2026/06/"><span class="date">2026/06</span><div class="count-group"><span class="count">1</span><span class="unit">篇</span></div></a></li><li class="item"><a href="/archives/"><span class="date">全部文章</span><div class="count-group"><span class="count">9</span><span class="unit">篇</span></div></a></li></ul></div></div></div><div class="button-group"><div class="console-btn-item"><span class="darkmode_switchbutton" data-solitude-action="toggleTheme" title="昼夜切换" heotip="昼夜切换"><i class="solitude fas fa-circle-half-stroke"></i></span></div><div class="console-btn-item" id="consoleHideAside"><span class="asideSwitch" data-solitude-action="switchHideAside" title="边栏显示控制" heotip="边栏显示控制"><i class="solitude fas fa-arrows-left-right-to-line"></i></span></div><div class="console-btn-item" id="consoleMusic" data-solitude-action="musicToggle"><span class="music-switch" title="音乐开关" heotip="音乐开关"><i class="solitude fas fa-compact-disc"></i></span></div></div></div><div class="console-mask" data-solitude-action="hideConsole"></div></div></div><div id="sidebar" style="zoom: 1;"><div id="menu-mask" style="display: none;"></div><div id="sidebar-menus"><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">4</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">9</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/recentcomments/"><div class="headline">评论</div><div class="length-num" id="twikoo_allcount"><i class="solitude fas fa-spinner fa-spin"></i></div><script pjax="pjax">(async () => {
+  await fetch('https://msqy-twikoo-tech.hf.space', {
+    method: "POST",
+    body: JSON.stringify({
+      "event": "GET_RECENT_COMMENTS",
+      "includeReply": true,
+      "pageSize": 999
+    }),
+    headers: {'Content-Type': 'application/json'}
+  }).then(res => res.json()).then(async ({data}) => {
+    document.querySelector('#twikoo_allcount').innerHTML = data.length
+  })
+})()</script></a></div></div></div><span class="sidebar-menu-item-title">功能</span><div class="sidebar-menu-item"><span class="darkmode_switchbutton menu-child" data-solitude-action="toggleTheme"><i class="solitude fas fa-circle-half-stroke"></i><span>显示模式</span></span></div><div class="back-menu-list-groups"><div class="back-menu-list-group"><div class="back-menu-list-title">博客相关</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://github.com/blog" title="源码" heotip="源码"><img class="nolazyload back-menu-item-icon" src="https://simpleicons.org/icons/github.svg" alt="源码"><span class="back-menu-item-text">源码</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://solitude.js.org/cn" title="Solitude" heotip="Solitude"><img class="nolazyload back-menu-item-icon" src="/img/solitude_logo.png" alt="Solitude"><span class="back-menu-item-text">Solitude</span></a></div></div><div class="back-menu-list-group"><div class="back-menu-list-title">个人网站</div><div class="back-menu-list"><a class="back-menu-item" href="https://msqy-h.github.io/homepage" title="主页" heotip="主页"><img class="nolazyload back-menu-item-icon" src="/img/pwa/favicon.ico" alt="主页"><span class="back-menu-item-text">主页</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://life.ljxh-h.cc.cd/gallery" title="图库" heotip="图库"><img class="nolazyload back-menu-item-icon" src="/img/pwa/favicon.ico" alt="图库"><span class="back-menu-item-text">图库</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://status.msqy.cc.cd/" title="监测" heotip="监测"><img class="nolazyload back-menu-item-icon" src="https://status.msqy.cc.cd/logo.svg" alt="监测"><span class="back-menu-item-text">监测</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://cover.msqy.cc.cd/picprose/" title="封面" heotip="封面"><img class="nolazyload back-menu-item-icon" src="/img/picprose.png" alt="封面"><span class="back-menu-item-text">封面</span></a></div></div></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>文章</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="solitude  fas fa-folder-closed"></i><span>归档</span></a></li><li><a class="site-page child" href="/categories/"><i class="solitude  fas fa-clone"></i><span>分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="solitude  fas fa-tags"></i><span>标签</span></a></li><li><a class="site-page child" href="/essay/"><i class="solitude  fas fa-message"></i><span>碎碎念</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>社交</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/links/"><i class="solitude  fas fa-user-group"></i><span>友情链接</span></a></li><li><a class="site-page child" href="/message/"><i class="solitude  fas fa-envelope"></i><span>留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>我的</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="solitude  fas fa-user"></i><span>关于</span></a></li><li><a class="site-page child" href="/kit/"><i class="solitude  fas fa-laptop"></i><span>装备</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>HaveFun</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="solitude  fas fa-music"></i><span>音乐馆</span></a></li><li><a class="site-page child" href="/games/"><i class="solitude  fas fa-gamepad"></i><span>游戏</span></a></li></ul></div></div><span class="sidebar-menu-item-title">标签</span><div class="card-tags"><div class="card-tag-cloud"><a href="/tags/2FA/">2FA<sup>1</sup></a><a href="/tags/%E5%AE%89%E5%85%A8/">安全<sup>1</sup></a><a href="/tags/Hexo/">Hexo<sup>4</sup></a><a href="/tags/Solitude/">Solitude<sup>4</sup></a><a href="/tags/Minecraft/">Minecraft<sup>1</sup></a><a href="/tags/%E8%A7%86%E8%A7%89/">视觉<sup>1</sup></a><a href="/tags/%E9%9F%B3%E4%B9%90/">音乐<sup>1</sup></a><a href="/tags/Termux/">Termux<sup>2</sup></a><a href="/tags/%E7%BB%88%E7%AB%AF/">终端<sup>2</sup></a></div></div><span class="sidebar-menu-item-title">网站信息</span><div class="webinfo"><div class="webinfo-item"><div class="item-name">全站字数 :</div><div class="item-count">14.2k</div></div></div></div></div><div><div class="needEndHide" id="rightside"><div class="rs_hide"><button class="mode" type="button" title="显示模式切换" heotip="显示模式切换" data-solitude-action="toggleTheme"><i class="fas fa-circle-half-stroke"></i></button><button class="aside pc" type="button" title="侧边栏" heotip="侧边栏" data-solitude-action="switchHideAside"><i class="fas fa-arrows-alt-h"></i></button></div><div class="rs_show"><button class="config" type="button" title="扩展" heotip="扩展" data-solitude-action="toggleTargetClass" data-solitude-target=".rs_hide"><i class="fas fa-gear"></i></button><button class="mobile toc" type="button" title="目录" heotip="目录" data-solitude-action="toggleTargetClass" data-solitude-target="#card-toc" data-solitude-class="open"><i class="fas fa-list"></i></button><button class="comment" type="button" title="评论" heotip="评论" data-solitude-action="scrollTo" data-solitude-target="post-comment"><i class="fas fa-comment"></i></button><button class="top" type="button" title="返回顶部" heotip="返回顶部" data-solitude-action="toTop"><i class="fas fa-arrow-up"></i><span id="percent">0</span></button></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header"><nav class="show" id="nav" data-solitude-action="onNavBlankClickCloseConsole" data-solitude-event="true"><div id="nav-group"><div id="blog_name"><div class="back-home-button" tabindex="-1"><i class="solitude fas fa-bars-progress"></i><div class="back-menu-list-groups"><div class="back-menu-list-group"><div class="back-menu-list-title">博客相关</div><div class="back-menu-list"><a class="back-menu-item" target="_blank" rel="noopener" href="https://github.com/blog" title="源码" heotip="源码"><img class="nolazyload back-menu-item-icon" src="https://simpleicons.org/icons/github.svg" alt="源码"><span class="back-menu-item-text">源码</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://solitude.js.org/cn" title="Solitude" heotip="Solitude"><img class="nolazyload back-menu-item-icon" src="/img/solitude_logo.png" alt="Solitude"><span class="back-menu-item-text">Solitude</span></a></div></div><div class="back-menu-list-group"><div class="back-menu-list-title">个人网站</div><div class="back-menu-list"><a class="back-menu-item" href="https://msqy-h.github.io/homepage" title="主页" heotip="主页"><img class="nolazyload back-menu-item-icon" src="/img/pwa/favicon.ico" alt="主页"><span class="back-menu-item-text">主页</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://life.ljxh-h.cc.cd/gallery" title="图库" heotip="图库"><img class="nolazyload back-menu-item-icon" src="/img/pwa/favicon.ico" alt="图库"><span class="back-menu-item-text">图库</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://status.msqy.cc.cd/" title="监测" heotip="监测"><img class="nolazyload back-menu-item-icon" src="https://status.msqy.cc.cd/logo.svg" alt="监测"><span class="back-menu-item-text">监测</span></a><a class="back-menu-item" target="_blank" rel="noopener" href="https://cover.msqy.cc.cd/picprose/" title="封面" heotip="封面"><img class="nolazyload back-menu-item-icon" src="/img/picprose.png" alt="封面"><span class="back-menu-item-text">封面</span></a></div></div></div></div><a href="/" title="返回博客主页" id="site-name" heotip="返回博客主页"><span class="title">MSQY</span><i class="solitude fas fa-home"></i></a></div><div id="page-name-mask"><div id="page-name"><a id="page-name-text" data-solitude-action="toTop" title="返回顶部" heotip="返回顶部">2FA 与 TOTP：更好地保护你的账号</a></div></div><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>文章</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/archives/"><i class="solitude  fas fa-folder-closed"></i><span>归档</span></a></li><li><a class="site-page child" href="/categories/"><i class="solitude  fas fa-clone"></i><span>分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="solitude  fas fa-tags"></i><span>标签</span></a></li><li><a class="site-page child" href="/essay/"><i class="solitude  fas fa-message"></i><span>碎碎念</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>社交</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/links/"><i class="solitude  fas fa-user-group"></i><span>友情链接</span></a></li><li><a class="site-page child" href="/message/"><i class="solitude  fas fa-envelope"></i><span>留言板</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>我的</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="solitude  fas fa-user"></i><span>关于</span></a></li><li><a class="site-page child" href="/kit/"><i class="solitude  fas fa-laptop"></i><span>装备</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><span>HaveFun</span></a><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="solitude  fas fa-music"></i><span>音乐馆</span></a></li><li><a class="site-page child" href="/games/"><i class="solitude  fas fa-gamepad"></i><span>游戏</span></a></li></ul></div></div></div><div id="nav-left"></div><div id="nav-right"><div class="nav-button" id="randomPost_button"><a class="site-page" data-solitude-action="randomPost" data-solitude-prevent="true" title="随机一篇文章" heotip="随机一篇文章" href="javascript:void(0);"><i class="solitude fas fa-dice-d6"></i></a></div><div class="nav-button" id="search-button"><a class="site-page social-icon search" href="javascript:void(0);" title="搜索" heotip="搜索"><i class="solitude fas fa-magnifying-glass"></i></a></div><div class="nav-button" id="nav-console"><a class="console_switchbutton" data-solitude-action="toggleConsole" data-solitude-prevent="true" title="中控台" heotip="中控台" href="javascript:void(0);"><label><i class="left"></i><i class="center"></i><i class="right"></i></label></a></div><div id="toggle-menu"><a class="site-page"><i class="solitude fas fa-bars"></i></a></div></div></div></nav><div class="coverdiv" id="coverdiv"><img class="nolazyload" id="post-cover" src="/2026/07/05/2fa/d4.webp" alt="2FA 与 TOTP：更好地保护你的账号"></div><div class="post-cover-aside"><a class="post-cover-aside-link fancybox" href="/2026/07/05/2fa/d4.webp" target="_blank" rel="noopener" data-fancybox="images" data-caption="2FA 与 TOTP：更好地保护你的账号" aria-label="2FA 与 TOTP：更好地保护你的账号"><img class="post-cover-aside-img nolazyload" src="/2026/07/05/2fa/d4.webp" alt="2FA 与 TOTP：更好地保护你的账号"></a></div><div id="post-info"><div id="post-firstinfo"><div class="meta-firstline"><a class="post-meta-original" title="该文章为原创文章，注意版权协议">原创</a><span class="post-meta-categories"><a class="post-meta-categories" href="/categories/%E6%8A%80%E6%9C%AF/">技术</a></span><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/2FA/"><span class="tags-name tags-punctuation"><i class="solitude fas fa-hashtag"></i>2FA</span></a><a class="post-meta__tags" href="/tags/%E5%AE%89%E5%85%A8/"><span class="tags-name tags-punctuation"><i class="solitude fas fa-hashtag"></i>安全</span></a></div></div></div></div><h1 class="post-title">2FA 与 TOTP：更好地保护你的账号</h1><div id="post-meta"><div class="meta-secondline"><span class="post-meta-wordcount"><i class="post-meta-icon solitude fas fa-file-word" title="文章字数"></i><span class="word-count">1.5k</span></span><span class="post-meta-date" title="发布于 2026-07-05 18:22:00"><i class="post-meta-icon solitude fas fa-calendar-days"></i><time datetime="2026-07-05T10:22:00.000Z">2026-07-05T10:22:00.000Z</time></span><span class="post-meta-date" title="最后更新于 2026-07-23 12:21:58"><i class="post-meta-icon solitude fas fa-arrows-rotate"></i><time datetime="2026-07-23T04:21:58.000Z">2026-07-23T04:21:58.000Z</time></span><span class="post-meta-readtime"><i class="post-meta-icon solitude fas fa-clock" title="阅读耗时"></i><span>5 分钟</span></span><span class="post-meta-position" title="作者IP归属地为China"><i class="post-meta-icon solitude fas fa-location-dot"></i><span>China</span></span></div></div></div><div class="post-radius-bottom"></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content article-container"><div class="post-ai"><div class="ai-title"><div class="ai-title-left"><i class="ai-title-icon solitude fas fa-newspaper"></i><div class="ai-title-text">文章摘要</div></div><div class="ai-tag" id="ai-tag">Deepseek</div></div><div class="ai-explanation" style="display: block;"></div></div><h2 id="✍️写在前面"><a href="#✍️写在前面" class="headerlink" title="✍️写在前面"></a>✍️写在前面</h2><p>最近闲来无事，在翻 GitHub 的账号设置。翻到 <code>Password and authentication（密码和身份验证）</code> 时，看到了个 <code>Two-factor authentication（双重认证）</code> ，也就是 2FA。一查才知道，这个东西对账号安全非常重要。也就是说，开启 2FA，基本没人盗得了你的号<span class="spoiler blur-text">包括你自己，但是不用担心，只要保存好恢复码，你还是能找回账号</span></p>
+<p>下面进入正题</p>
+<div class="note warning"><i class="solitude fa-solid fa-triangle-exclamation"></i><p>注意：本人非专业人士，本文内容全是个人理解，如有错误，欢迎指正</p></div>
+
+<h2 id="🤔介绍-2FA"><a href="#🤔介绍-2FA" class="headerlink" title="🤔介绍 2FA"></a>🤔介绍 2FA</h2><h3 id="什么是-2FA"><a href="#什么是-2FA" class="headerlink" title="什么是 2FA"></a>什么是 2FA</h3><blockquote>
+<p>双因子认证（2FA）是一种结合两种不同验证因素的身份认证方法，通常包括用户已知的密码（如账号密码）和用户持有的实物（如手机、令牌或生物特征）两类要素。其目的是通过双重验证提升账户安全性，主要应用于企业远程访问、金融及电子商务等领域。——<a target="_blank" rel="noopener" href="https://baike.baidu.com/item/%E5%8F%8C%E5%9B%A0%E5%AD%90%E8%AE%A4%E8%AF%81%E6%9C%BA%E5%88%B6/9748125">百度百科</a></p>
+</blockquote>
+<p>通俗地讲，其实就是你登录时要用两个东西：一个是<strong>你的密码</strong>，一个是<strong>你手里有的东西</strong>，例如<code>手机</code>、<code>令牌</code>等东西</p>
+<h3 id="常用的认证方式"><a href="#常用的认证方式" class="headerlink" title="常用的认证方式"></a>常用的认证方式</h3><p>常用的认证方式有这几种：</p>
+<ul>
+<li><strong>SMS OTP（短信验证码）</strong>：没错，就是你经常输入的短信验证码</li>
+<li><strong>TOTP（基于时间的一次性密码）</strong>：听起来很高大上，其实就是网站和你约定好一个暗号，各自用相同算法，结合当前时间，算出一个验证码，比对算出的结果，结果一样就放行</li>
+<li><strong>FIDO2（硬件安全密钥）</strong>：使用实体设备通过一定方式连接网站进行认证</li>
+<li><strong>推送确认</strong>：网站推送一个认证请求到手机APP上，在手机APP上确认</li>
+<li>等等</li>
+</ul>
+<p>这里主要介绍 <strong>TOTP</strong>，也<strong>推荐使用这个</strong></p>
+<p>为什么？</p>
+<p>好问题。</p>
+<p>下面是简单的对比。</p>
+<ul>
+<li><strong>TOTP</strong>：<strong>安全性较高</strong>，不依赖网站方的短信发送速度，<strong>速度快且比较方便</strong>。</li>
+<li><strong>短信</strong>：虽然<strong>方便</strong>，但是手机信号差时，根本收不到<span class="spoiler blur-text">虽然一般情况下能收到，但是到地下室或电梯就麻烦了</span>。这还是其次，主要是网站方<strong>发送的短信不一定及时到</strong><span class="spoiler blur-text">特别点名某度，经常是五分钟过去了，点了重发，上一个失效的验证码才到 ~~德铁行为（~~</span>，且安全性低。</li>
+<li><strong>FIDO2</strong>：<strong>最安全</strong>，但是<strong>又麻烦又贵</strong></li>
+<li><strong>推送确认</strong>：这样还需要在手机<strong>多安装APP</strong>，浪费空间<span class="spoiler blur-text">但是GitHub的挺好用的</span></li>
+</ul>
+<p>当然，如果你没有什么特别重要的东西，用短信就够了。但是，如果你想学习也可以，以备不时之需（假如某网站突然强制要求使用了呢）</p>
+<p>下面是 TOTP 的使用教程</p>
+<h2 id="🔐2FA-的开启与-TOTP-的使用"><a href="#🔐2FA-的开启与-TOTP-的使用" class="headerlink" title="🔐2FA 的开启与 TOTP 的使用"></a>🔐2FA 的开启与 TOTP 的使用</h2><div class="note success"><i class="solitude fa-solid fa-lightbulb"></i><p>你需要准备：</p>
+<ul>
+<li>脑子</li>
+<li>手</li>
+<li>手机或电脑</li>
+<li>网络</li>
+</ul></div>
+
+<p>下面以 <strong>GitHub</strong> 的开启为例</p>
+<h3 id="1-选择你的-TOTP-应用"><a href="#1-选择你的-TOTP-应用" class="headerlink" title="1. 选择你的 TOTP 应用"></a>1. 选择你的 TOTP 应用</h3><p>这里建议使用<strong>开源</strong>的，这是因为开源的代码完全透明，一看就知道有没有后门。就算你看不懂代码，也会有大佬帮你看。</p>
+<p>当然，不想那么麻烦，用 <strong>Google Authenticator</strong> 或 <strong>Microsoft Authenticator</strong> 也行。大厂产品，有保障。</p>
+<p>我推荐 <strong>2FAS</strong>，这个APP完全开源，界面也不错，支持导入导出，苹果安卓都有。<a target="_blank" rel="noopener" href="https://2fas.com/">官网传送门</a></p>
+<div class="repo-card">
+  <a class="name-wrcxxzazi repo-title fancybox" target="_blank" rel="noopener" href="https://github.com/twofas/2fas-pass-android"></a>
+  <p class="desc-wrcxxzazi repo-desc"></p>
+  <div class="repo-gist">
+    <i class="fas fa-star"></i>
+    <span class="star-wrcxxzazi"></span>
+    <i class="fas fa-code-branch"></i>
+    <span class="fork-wrcxxzazi"></span>
+  </div>
+  <img class="lang-wrcxxzazi repo-language no-lightbox" alt="图片">
+  <script>
+    fetch('https://api.github.com/repos/twofas/2fas-pass-android')
+      .then(res => res.json())
+      .then(data => {
+        document.querySelector('.name-wrcxxzazi').innerText = data.name;
+        document.querySelector('.desc-wrcxxzazi').innerText = data.description;
+        document.querySelector('.star-wrcxxzazi').innerText = data.stargazers_count;
+        document.querySelector('.fork-wrcxxzazi').innerText = data.forks_count;
+        document.querySelector('.lang-wrcxxzazi').src = 'https://skillicons.dev/icons?i=' + data.language.toLowerCase();
+    });
+  </script>
+  </div>
+
+<div class="repo-card">
+  <a class="name-yac5reogd repo-title fancybox" target="_blank" rel="noopener" href="https://github.com/twofas/2fas-pass-ios"></a>
+  <p class="desc-yac5reogd repo-desc"></p>
+  <div class="repo-gist">
+    <i class="fas fa-star"></i>
+    <span class="star-yac5reogd"></span>
+    <i class="fas fa-code-branch"></i>
+    <span class="fork-yac5reogd"></span>
+  </div>
+  <img class="lang-yac5reogd repo-language no-lightbox" alt="图片">
+  <script>
+    fetch('https://api.github.com/repos/twofas/2fas-pass-ios')
+      .then(res => res.json())
+      .then(data => {
+        document.querySelector('.name-yac5reogd').innerText = data.name;
+        document.querySelector('.desc-yac5reogd').innerText = data.description;
+        document.querySelector('.star-yac5reogd').innerText = data.stargazers_count;
+        document.querySelector('.fork-yac5reogd').innerText = data.forks_count;
+        document.querySelector('.lang-yac5reogd').src = 'https://skillicons.dev/icons?i=' + data.language.toLowerCase();
+    });
+  </script>
+  </div>
+
+<p>进到对应仓库下载即可。iOS 在 AppStore 下载。</p>
+<h3 id="2-开启-GitHub-的-2FA-验证"><a href="#2-开启-GitHub-的-2FA-验证" class="headerlink" title="2. 开启 GitHub 的 2FA 验证"></a>2. 开启 GitHub 的 2FA 验证</h3><p>看到这，我默认你有 GitHub 帐号了。</p>
+<ol>
+<li>打开 <a target="_blank" rel="noopener" href="https://github.com/settings/security">GitHub 安全设置</a></li>
+<li>选择 <code>Password and authentication</code></li>
+<li>滑到最底部，你会看见这么个东西：<br><img src="" alt="2fa-1.webp" title="双重验证选项" data-lazy-src="/2026/07/05/2fa/2fa-1.webp"><br>点击<code>Enable two-factor authentication</code></li>
+<li>GitHub 会让你认证账号，按指示操作即可</li>
+<li>设置 2FA 密钥。点击 2FAS 右下角的加号，扫描二维码，复制生成的验证码，输入到 GitHub 中。<br><img src="" alt="2fa-2.webp" title="双重验证密钥获取" data-lazy-src="/2026/07/05/2fa/2fa-2.webp"></li>
+<li>保存恢复代码。**务必妥善保管！丢了将无法找回！**建议抄纸上放抽屉，或者多复制几份到不联网设备上。</li>
+<li>完成！</li>
+</ol>
+<p>以后登录 GitHub 时，只需输入密码，再简单地输入 TOTP 码即可。<strong>现在你的账号很安全</strong>了！</p>
+<p>同理，其他的网站也可以这么操作（比如 <code>Microsoft</code> ）。</p>
+<div class="note warning"><i class="solitude fa-solid fa-triangle-exclamation"></i><p><strong>务必保存好恢复代码，但是不要泄露给其他人</strong>，否则一旦丢失，你的账号永远回不来了！<span class="spoiler blur-text">也不至于彻底找不回来，但是非常麻烦</span></p></div>
+
+<h2 id="💬再说几句"><a href="#💬再说几句" class="headerlink" title="💬再说几句"></a>💬再说几句</h2><p><strong>并不是开启了 2FA，就可以高枕无忧了。<strong>毕竟 2FA 的 TOTP 不是没有风险的，比如有人监控了你的手机，那他就可以直接获取你的密钥。所以，还是要</strong>注意上网安全，不乱下软件，不泄露真实信息，这才是根本。</strong></p>
+<h2 id="🏁结尾"><a href="#🏁结尾" class="headerlink" title="🏁结尾"></a>🏁结尾</h2><p>本文主要介绍了 2FA，相信看到这里你一定有收获。总之，<strong>没有身份验证方法是绝对安全的</strong>。不过也不用怕，如果你只是普通用户，而且账号没什么重要的东西，那么用短信就够了，比纯密码好。如果你想保护你的账号，那就给你的账号加上 2FA 吧。</p>
+<h2 id="📅更新计划"><a href="#📅更新计划" class="headerlink" title="📅更新计划"></a>📅更新计划</h2><p>打算下一篇写一下 Hexo 博客的部署教程。随缘更新，可能会写写其他的。生活愉快。</p>
+</article><div class="post-copyright"><div class="post-copyright__author_group"><div class="post-copyright__author_img"><img class="post-copyright__author_img_front" src="" alt="图片" data-lazy-src="/img/avatar.webp"></div><div class="post-copyright__author_name">陌上轻烟</div><div class="post-copyright__author_desc">所见所闻，所思所想</div></div><div class="post-tools" id="post-tools"><div class="post-tools-left"><div id="quit-box" data-solitude-action="hideReward"></div></div></div><div class="post-copyright__notice"><span class="post-copyright-info">本文是原创文章，采用<a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans">CC BY-NC-SA 4.0</a>协议，完整转载请注明来自<a href="/">MSQY's Blog</a></span></div></div><div class="post-tools-right"><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/2FA/"><span class="tags-punctuation"><i class="solitude fas fa-hashtag"></i>2FA<span class="tagsPageCount">1</span></span></a><a class="post-meta__tags" href="/tags/%E5%AE%89%E5%85%A8/"><span class="tags-punctuation"><i class="solitude fas fa-hashtag"></i>安全<span class="tagsPageCount">1</span></span></a></div></div></div><nav class="needEndHide pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2026/07/06/hexo-image/"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Hexo 图片引用相关问题</div></div></a></div><div class="next-post pull-right"><a href="/2026/06/12/test/"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">第一篇文章</div></div></a></div></nav><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="solitude fas fa-comment"></i><span> 评论</span><span class="count"> (<span class="twikoo-count"><i class="solitude fas fa-spinner fa-spin"></i></span>)</span></div></div><div class="comment-wrap"><div id="twikoo-wrap"></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-content"><div class="card-info-avatar is-center"><div class="top-group"><div class="sayhi" id="sayhi" data-solitude-action="changeWittyWord"></div></div></div><div class="avatar"><img alt="头像" src="" data-lazy-src="/img/avatar.webp"></div><div class="description">咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧咕咕嘎嘎🐧</div><div class="bottom-group"><span class="left"><div class="name">陌上轻烟</div><div class="desc">NVIDIA GeForce RTX 5060 Ti!</div></span><div class="social-icons is-center"><a class="social-icon" target="_blank" rel="noopener" href="https://github.com/msqy-h" title="GitHub" heotip="GitHub"><i class="solitude  fab fa-github"></i></a><a class="social-icon" href="mailto:Hydroxid_Hualin@outlook.com" title="Mail" heotip="Mail"><i class="solitude  fas fa-envelope"></i></a></div></div></div></div><div><div class="card-widget" id="card-widget-calendar"><div class="item-headline"><i></i><span></span></div><div class="item-content"><div id="calendar-area-left">
+  <div id="calendar-week"></div>
+  <div id="calendar-date" style="font-size: 48px;"></div>
+  <div id="calendar-solar"></div>
+  <div id="calendar-lunar"></div>
+</div>
+<div id="calendar-area-right">
+  <div id="calendar-main">
+  </div>
+</div>
+</div></div></div><div><div class="card-widget" id="card-widget-schedule"><div class="item-headline"><i></i><span></span></div><div class="item-content"><div id="schedule-area-left">
+  <div id="schedule-title">距离春节</div>
+  <div id="schedule-days"></div>
+  <div id="schedule-date">2027-02-06</div>
+</div>
+<div id="schedule-area-right">
+  <div class="schedule-r0">
+    <div class="schedule-d0">本年</div>
+    <div class="schedule-d1">
+      <progress max="365" id="pBar_year"></progress>
+    </div>
+  </div>
+  <div class="schedule-r1">
+    <div class="schedule-d0">本月</div>
+    <div class="schedule-d1">
+      <progress max="30" id="pBar_month"></progress>
+    </div>
+  </div>
+  <div class="schedule-r2">
+    <div class="schedule-d0">本周</div>
+    <div class="schedule-d1">
+      <progress max="7" id="pBar_week"></progress>
+    </div>
+  </div>
+</div>
+</div></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="solitude fas fa-bars"></i><span>文章目录</span></div><div class="toc-content" id="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E2%9C%8D%EF%B8%8F%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="toc-text">✍️写在前面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%A4%94%E4%BB%8B%E7%BB%8D-2FA"><span class="toc-text">🤔介绍 2FA</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-2FA"><span class="toc-text">什么是 2FA</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E7%9A%84%E8%AE%A4%E8%AF%81%E6%96%B9%E5%BC%8F"><span class="toc-text">常用的认证方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%94%902FA-%E7%9A%84%E5%BC%80%E5%90%AF%E4%B8%8E-TOTP-%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-text">🔐2FA 的开启与 TOTP 的使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E9%80%89%E6%8B%A9%E4%BD%A0%E7%9A%84-TOTP-%E5%BA%94%E7%94%A8"><span class="toc-text">1. 选择你的 TOTP 应用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%BC%80%E5%90%AF-GitHub-%E7%9A%84-2FA-%E9%AA%8C%E8%AF%81"><span class="toc-text">2. 开启 GitHub 的 2FA 验证</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%92%AC%E5%86%8D%E8%AF%B4%E5%87%A0%E5%8F%A5"><span class="toc-text">💬再说几句</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%8F%81%E7%BB%93%E5%B0%BE"><span class="toc-text">🏁结尾</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%93%85%E6%9B%B4%E6%96%B0%E8%AE%A1%E5%88%92"><span class="toc-text">📅更新计划</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="solitude fas fa-map"></i><span>最近发布</span></div><div class="aside-list"><a class="aside-list-item" href="/2026/08/05/native-music/" title="逃离流媒体，回到本地音乐 - 本地音乐软件推荐"><div class="thumbnail"><img alt="逃离流媒体，回到本地音乐 - 本地音乐软件推荐" src="" data-lazy-src="/2026/08/05/native-music/cover.webp"></div><div class="content"><span class="title" href="/2026/08/05/native-music/" title="逃离流媒体，回到本地音乐 - 本地音乐软件推荐">逃离流媒体，回到本地音乐 - 本地音乐软件推荐</span><span class="categories" href="/2026/08/05/native-music/">软件</span></div></a><a class="aside-list-item" href="/2026/07/26/termux-neovim/" title="Termux Neovim + LazyVim 配置实记"><div class="thumbnail"><img alt="Termux Neovim + LazyVim 配置实记" src="" data-lazy-src="/2026/07/26/termux-neovim/cover.webp"></div><div class="content"><span class="title" href="/2026/07/26/termux-neovim/" title="Termux Neovim + LazyVim 配置实记">Termux Neovim + LazyVim 配置实记</span><span class="categories" href="/2026/07/26/termux-neovim/">软件</span></div></a><a class="aside-list-item" href="/2026/07/25/termux-zsh/" title="Termux 配置 zsh 以及简单美化记录"><div class="thumbnail"><img alt="Termux 配置 zsh 以及简单美化记录" src="" data-lazy-src="/2026/07/25/termux-zsh/cover.webp"></div><div class="content"><span class="title" href="/2026/07/25/termux-zsh/" title="Termux 配置 zsh 以及简单美化记录">Termux 配置 zsh 以及简单美化记录</span><span class="categories" href="/2026/07/25/termux-zsh/">软件</span></div></a><a class="aside-list-item" href="/2026/07/14/minecraft-rtx/" title="Minecraft 基岩版光线追踪配置实录"><div class="thumbnail"><img alt="Minecraft 基岩版光线追踪配置实录" src="" data-lazy-src="/2026/07/14/minecraft-rtx/cover.webp"></div><div class="content"><span class="title" href="/2026/07/14/minecraft-rtx/" title="Minecraft 基岩版光线追踪配置实录">Minecraft 基岩版光线追踪配置实录</span><span class="categories" href="/2026/07/14/minecraft-rtx/">游戏</span></div></a><a class="aside-list-item" href="/2026/07/12/hexo-lazyload/" title="Hexo Solitude 博客懒加载的问题与解决"><div class="thumbnail"><img alt="Hexo Solitude 博客懒加载的问题与解决" src="" data-lazy-src="/2026/07/12/hexo-lazyload/cover.webp"></div><div class="content"><span class="title" href="/2026/07/12/hexo-lazyload/" title="Hexo Solitude 博客懒加载的问题与解决">Hexo Solitude 博客懒加载的问题与解决</span><span class="categories" href="/2026/07/12/hexo-lazyload/">博客</span></div></a></div></div></div></div></main><footer id="footer"><div id="footer_deal"><a class="deal_link" target="_blank" rel="noopener" href="https://github.com/MSQY-H" title="GitHub" heotip="GitHub"><i class="solitude  fab fa-github"></i></a><div><div class="nolazyload footer_mini_logo" id="footer_mini_logo" title="返回顶部" heotip="返回顶部" data-solitude-action="toTop"><img src="" alt="返回顶部"></div></div><a class="deal_link" href="mailto:Hydroxid_Hualin@outlook.com" title="Mail" heotip="Mail"><i class="solitude  far fa-envelope"></i></a></div><div><div id="st-footer"><div class="footer-group"><h3 class="footer-title">导航</h3><div class="footer-links"><a class="footer-item" href="/archives/" title="Archives">Archives</a><a class="footer-item" href="/categories/" title="Categories">Categories</a><a class="footer-item" href="/tags/" title="Tags">Tags</a></div></div><div class="footer-group"><div class="footer-title-group"><h3 class="footer-title">友链</h3><button class="random-friends-btn" data-solitude-action="randomLinksList" title="友链" heotip="友链"><i class="solitude fas fa-arrows-rotate"></i></button></div><div class="footer-links" id="friend-links-in-footer"></div></div></div></div><div id="footer-bar"><div class="footer-bar-links"><div class="footer-bar-left"><div class="copyright">© 2026 By<a class="footer-bar-link" href="/" title="陌上轻烟">陌上轻烟</a></div><div class="beian-group"><div><a class="footer-bar-link" target="_blank" rel="noopener" href="https://kivo.wiki" title="字体来自kivo.wiki" heotip="字体来自kivo.wiki"><span class="beian-name">字体来自kivo.wiki</span></a></div><a class="footer-bar-link" target="_blank" rel="noopener" href="https://hexo.io/" title="框架：Hexo" heotip="框架：Hexo">框架：Hexo</a><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/everfu/hexo-theme-solitude" title="主题：Solitude" heotip="主题：Solitude">主题：Solitude</a></div></div><div><div class="footer-bar-right"><a class="footer-bar-link" href="/rss2.xml" title="RSS" heotip="RSS">RSS</a><a class="footer-bar-link" href="/sitemap.xml" title="Sitemap" heotip="Sitemap">Sitemap</a><a class="footer-bar-link" target="_blank" rel="noopener" href="https://github.com/everfu/hexo-theme-solitude/blob/main/LICENSE" title="License" heotip="License"><i class="solitude fas fa-copyright"></i><i class="solitude fab fa-creative-commons-by"></i><i class="solitude fab fa-creative-commons-nc"></i><i class="solitude fab fa-creative-commons-nd"></i></a></div></div></div></div><div class="comment-barrage needEndHide"></div></footer></div><div><!-- Critical scripts loaded synchronously--><script src="/js/utils.js?v=4.0.0"></script><!-- Non-critical scripts loaded asynchronously--><script defer="" src="/js/third_party/waterfall.min.js?v=4.0.0"></script><script src="https://cdn.jsdelivr.net/npm/pjax@0.2.8/pjax.min.js"></script><!-- Feature-specific scripts loaded asynchronously--><!-- UI enhancement scripts--><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.iife.min.js"></script><script defer="" src="https://cdn.jsdelivr.net/npm/node-snackbar@0.1.16/dist/snackbar.min.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.36/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swiper@11.0.5/swiper-bundle.min.js"></script><!-- Music player scripts--><script>var meting_api = 'https://meting.mikus.ink/api?server=:server&type=:type&id=:id';</script><script defer="" src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script><script defer="" src="https://cdn.jsdelivr.net/npm/meting@2.0.1/dist/Meting.min.js"></script><!-- Cover color processing scripts--><script defer="" src="https://cdn.jsdelivr.net/npm/colorthief@2.6.0/dist/color-thief.min.js"></script><script>window.paceOptions = {
+  restartOnPushState: false
+}
+
+Solitude.addGlobalFn('pjaxSend', () => {
+  Pace.restart()
+}, 'pace_restart')
+</script><script src="https://cdn.jsdelivr.net/npm/pace-js@1.2.4/pace.min.js"></script><!-- Search functionality--><!-- Main module dynamically imports enabled first-party features.--><script type="module" src="/js/main.js?v=4.0.0"></script><script src="/schedule/schedule.js"></script><script src="https://open.lightxi.com/unpkg/chinese-lunar@0.1.4/lib/chinese-lunar.js"></script><div class="js-pjax"><script>(() => {
+    const getCount = () => {
+        const ele = document.querySelectorAll('.twikoo-count')
+        if (!ele) return
+        twikoo.getCommentsCount({
+            envId: 'https://msqy-twikoo-tech.hf.space',
+            region: '',
+            urls: [window.location.pathname],
+            includeReply: false
+        }).then(res => {
+            ele.forEach(item => item.textContent = res[0].count)
+        }).catch(err => {
+            console.error(err)
+        })
+    }
+    const init = () => {
+        twikoo.init(Object.assign({
+            el: '#twikoo-wrap',
+            envId: 'https://msqy-twikoo-tech.hf.space',
+            region: '',
+            path: window.location.pathname,
+            onCommentLoaded: () => {
+                Solitude.config.lightbox && Solitude.lightbox(document.querySelectorAll('#twikoo .tk-content img:not(.tk-owo-emotion)'))
+            }
+        }, null))
+
+         && getCount()
+        Solitude.owoBig({
+            body: '.OwO-body',
+            item: '.OwO-items li'
+        })
+
+        false && barrageTwikoo()
+    }
+
+    const loadTwikoo = () => {
+        if (typeof twikoo === 'object') setTimeout(init,0)
+        else Solitude.getScript('https://cdn.jsdelivr.net/npm/twikoo@1.6.41/dist/twikoo.all.min.js').then(init)
+    }
+
+    if ('Twikoo' === 'Twikoo' || true) {
+        if (true) Solitude.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+        else loadTwikoo()
+    } else {
+        window.loadTwoComment = loadTwikoo
+    }
+})()
+</script></div></div><!-- pjax--><script>function initPjax() {
+    if (typeof Pjax === 'undefined') {
+        setTimeout(initPjax, 100);
+        return;
+    }
+
+    const instance = new Pjax({
+        elements: 'a:not([target="_blank"])',
+        selectors: ["title","#body-wrap","#site-config","meta[name=\"description\"]",".js-pjax","meta[property^=\"og:\"]","#config-diff",".rs_show",".rs_hide"],
+        cacheBust: false,
+        analytics: false,
+        scrollRestoration: false
+    })
+
+    Solitude.pjax = instance;
+
+    document.querySelectorAll('script[data-pjax]').forEach(item => {
+        const newScript = document.createElement('script')
+        const content = item.text || item.textContent || item.innerHTML || ""
+        Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+        newScript.appendChild(document.createTextNode(content))
+        item.parentNode.replaceChild(newScript, item)
+    })
+
+    document.addEventListener('pjax:send', () => {
+        document.dispatchEvent(new CustomEvent('solitude:beforeNavigate'))
+        Solitude.disposePage?.()
+        Object.values(window.globalFn?.pjax || {}).forEach(dispose => dispose())
+        if (window.globalFn) window.globalFn.pjax = {}
+    })
+
+    document.addEventListener('pjax:complete', async () => {
+        await Solitude.refresh()
+
+        document.querySelectorAll('script[data-pjax]').forEach(item => {
+            const newScript = document.createElement('script')
+            const content = item.text || item.textContent || item.innerHTML || ""
+            Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+            newScript.appendChild(document.createTextNode(content))
+            item.parentNode.replaceChild(newScript, item)
+        })
+
+        Solitude.config.lazyload.enable && window.lazyLoadInstance?.update()
+        document.dispatchEvent(new CustomEvent('solitude:afterNavigate', {
+            detail: {page: Solitude.page}
+        }))
+
+    })
+
+    document.addEventListener('pjax:error', (e) => {
+        if (e.request.status === 404) {
+            Solitude.navigate('/404.html')
+        }
+    })
+}
+
+// 初始化 Pjax
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPjax);
+} else {
+    initPjax();
+}</script><!-- google adsense--><div id="local-search"><div class="search-dialog" role="dialog" aria-modal="true" aria-labelledby="local-search-title"><nav class="search-nav"><span class="search-dialog-title" id="local-search-title">搜索</span><button class="search-close-button" type="button" aria-label="关闭搜索"><i class="solitude fas fa-xmark"></i></button></nav><div class="search-wrap"><div class="search-box"><input class="search-box-input" id="search-input" type="search" autocomplete="off" spellcheck="false" autocorrect="off" autocapitalize="off" placeholder="输入关键词快速查找" aria-label="输入关键词快速查找"></div><div id="search-suggestions" aria-label="热门搜索"></div><ul id="search-results" hidden=""></ul><div id="search-pagination"></div><div id="search-tips"></div></div></div><div id="search-mask"></div></div><div><div class="needEndHide" id="nav-music" data-solitude-action="handleMusicClick" data-solitude-event="true"><div id="nav-music-hoverTips"><button class="music-control-btn" id="music-prev" type="button" title="切换到上一首" aria-label="切换到上一首" data-solitude-action="musicSkipBack" data-solitude-stop="true"><i class="fas fa-backward-step"></i></button><button class="music-control-btn" id="music-pause" type="button" title="暂停音乐" aria-label="暂停音乐" data-solitude-action="musicToggle" data-solitude-stop="true"><i class="fas fa-pause"></i></button><button class="music-control-btn" id="music-play" type="button" title="播放音乐" aria-label="播放音乐" data-solitude-action="musicToggle" data-solitude-stop="true"><i class="fas fa-play"></i></button><button class="music-control-btn" id="music-next" type="button" title="切换到下一首" aria-label="切换到下一首" data-solitude-action="musicSkipForward" data-solitude-stop="true"><i class="fas fa-forward-step"></i></button></div><meting-js id="3950692" server="netease" type="song" mutex="true" preload="none" theme="var(--efu-main)" data-lrctype="0" order="random" volume="0.8"></meting-js></div></div></body></html>
