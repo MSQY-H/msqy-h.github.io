@@ -74,7 +74,7 @@
   </url>
   
   <url>
-    <loc>https://msqy-h.github.io/about/</loc>
+    <loc>https://msqy-h.github.io/essay/</loc>
     
     <lastmod>2026-07-23</lastmod>
     
@@ -83,7 +83,7 @@
   </url>
   
   <url>
-    <loc>https://msqy-h.github.io/essay/</loc>
+    <loc>https://msqy-h.github.io/about/</loc>
     
     <lastmod>2026-07-23</lastmod>
     
@@ -101,15 +101,6 @@
   </url>
   
   <url>
-    <loc>https://msqy-h.github.io/links/</loc>
-    
-    <lastmod>2026-07-23</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://msqy-h.github.io/kit/</loc>
     
     <lastmod>2026-07-23</lastmod>
@@ -119,7 +110,7 @@
   </url>
   
   <url>
-    <loc>https://msqy-h.github.io/message/</loc>
+    <loc>https://msqy-h.github.io/links/</loc>
     
     <lastmod>2026-07-23</lastmod>
     
@@ -129,6 +120,15 @@
   
   <url>
     <loc>https://msqy-h.github.io/music/</loc>
+    
+    <lastmod>2026-07-23</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://msqy-h.github.io/message/</loc>
     
     <lastmod>2026-07-23</lastmod>
     
@@ -197,13 +197,6 @@
   </url>
   
   <url>
-    <loc>https://msqy-h.github.io/tags/%E9%9F%B3%E4%B9%90/</loc>
-    <lastmod>2026-08-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://msqy-h.github.io/tags/Termux/</loc>
     <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
@@ -212,6 +205,13 @@
   
   <url>
     <loc>https://msqy-h.github.io/tags/%E7%BB%88%E7%AB%AF/</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://msqy-h.github.io/tags/%E9%9F%B3%E4%B9%90/</loc>
     <lastmod>2026-08-08</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

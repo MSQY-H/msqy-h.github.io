@@ -8,17 +8,17 @@
 
     let isChina = false;
     let requestFinished = false;
+    let bannerCreated = false;
 
     function handleResponse(data) {
         const country = data.country || data.country_code || data.region || '';
         isChina = /中国|CN|China/i.test(country);
         requestFinished = true;
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-            tryCreateBanner();
-        }
+        // 请求返回后立即尝试创建横幅
+        tryCreateBanner();
     }
 
-    // 立即发起 IP 请求
+    // 立即发起 IP 请求（不等待 DOM）
     const xhr = new XMLHttpRequest();
     xhr.open('GET', API_URL, true);
     xhr.timeout = 5000;
@@ -33,22 +33,31 @@
     xhr.onerror = xhr.ontimeout = function () { /* 静默失败 */ };
     xhr.send();
 
+    // 轮询检测 body 是否可用，一旦可用立即创建
     function tryCreateBanner() {
+        if (bannerCreated) return;
         if (!isChina || !requestFinished) return;
-        if (document.getElementById('msqy-banner')) return;
+        if (!document.body) {
+            // body 尚未存在，20ms 后重试
+            setTimeout(tryCreateBanner, 20);
+            return;
+        }
+        // body 已存在，立即创建横幅
         createBanner();
+        bannerCreated = true;
     }
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', tryCreateBanner);
-    } else {
-        setTimeout(tryCreateBanner, 100);
+    // 额外保障：如果请求返回时 body 未准备好，上面轮询会重试；
+    // 但如果脚本执行时 body 已经存在（极少情况），也要尝试
+    if (document.body && document.readyState !== 'loading') {
+        // 如果 body 已经存在且不是加载中，尝试创建（但请求可能未完成）
+        // 我们可以先尝试，但会受 isChina 和 requestFinished 限制
+        // 所以无事可做，请求回调会触发 tryCreateBanner
     }
 
     function createBanner() {
         const banner = document.createElement('div');
         banner.id = 'msqy-banner';
-        // 与屏幕左右边距 1rem，宽度自适应，居中显示
         banner.style.cssText = `
             position: fixed;
             top: .4rem;
@@ -113,13 +122,11 @@
             banner.style.opacity = '0';
             banner.style.transform = 'translateY(-20px)';
             setTimeout(() => banner.remove(), 300);
-            // 不保存任何状态，刷新页面后横幅会重新出现
+            // 不保存状态，刷新后重新出现
         });
 
         banner.appendChild(textWrapper);
         banner.appendChild(closeBtn);
-
-        // 点击跳转链接时不保存状态，下次进入仍然检测
         document.body.appendChild(banner);
 
         requestAnimationFrame(() => {
