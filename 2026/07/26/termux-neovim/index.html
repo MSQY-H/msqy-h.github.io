@@ -206,24 +206,24 @@ initTheme()</script><template id="site-config">{"root":"/","algolia":null,"local
 
 <p>如果用的是普通手机（遥控器比例），官方 LazyVim 可能适配的不是很好，我找到了为 Termux 定制的 LazyVim，我在这里会用该 LazyVim 的脚本来配置。</p>
 <div class="repo-card">
-  <a class="name-15f83rk1t repo-title fancybox" target="_blank" rel="noopener" href="https://github.com/Veha0001/dotLazyVim"></a>
-  <p class="desc-15f83rk1t repo-desc"></p>
+  <a class="name-d8pfv2g09 repo-title fancybox" target="_blank" rel="noopener" href="https://github.com/Veha0001/dotLazyVim"></a>
+  <p class="desc-d8pfv2g09 repo-desc"></p>
   <div class="repo-gist">
     <i class="fas fa-star"></i>
-    <span class="star-15f83rk1t"></span>
+    <span class="star-d8pfv2g09"></span>
     <i class="fas fa-code-branch"></i>
-    <span class="fork-15f83rk1t"></span>
+    <span class="fork-d8pfv2g09"></span>
   </div>
-  <img class="lang-15f83rk1t repo-language no-lightbox" alt="图片">
+  <img class="lang-d8pfv2g09 repo-language no-lightbox" alt="图片">
   <script>
     fetch('https://api.github.com/repos/Veha0001/dotLazyVim')
       .then(res => res.json())
       .then(data => {
-        document.querySelector('.name-15f83rk1t').innerText = data.name;
-        document.querySelector('.desc-15f83rk1t').innerText = data.description;
-        document.querySelector('.star-15f83rk1t').innerText = data.stargazers_count;
-        document.querySelector('.fork-15f83rk1t').innerText = data.forks_count;
-        document.querySelector('.lang-15f83rk1t').src = 'https://skillicons.dev/icons?i=' + data.language.toLowerCase();
+        document.querySelector('.name-d8pfv2g09').innerText = data.name;
+        document.querySelector('.desc-d8pfv2g09').innerText = data.description;
+        document.querySelector('.star-d8pfv2g09').innerText = data.stargazers_count;
+        document.querySelector('.fork-d8pfv2g09').innerText = data.forks_count;
+        document.querySelector('.lang-d8pfv2g09').src = 'https://skillicons.dev/icons?i=' + data.language.toLowerCase();
     });
   </script>
   </div>
