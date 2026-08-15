@@ -1,0 +1,1443 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>MSQY&apos;s Blog</title><description>所见所闻，所思所想</description><link>https://msqy-h.github.io/</link><language>zh_CN</language><item><title>零预算网站域名解决方案</title><link>https://msqy-h.github.io/posts/domain-name-solutions/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/domain-name-solutions/</guid><description>没有预算买域名？GitHub Pages 的域名 + Cloudflare Pages 作镜像站，这个方案也不错。</description><pubDate>Sat, 08 Aug 2026 21:03:00 GMT</pubDate><content:encoded>&lt;h2&gt;碎碎念&lt;/h2&gt;
+&lt;p&gt;我之前一直使用的域名都是 ljxh-h.cc.cd。后来在让 Bing 收录的时候，不知道为什么，Bing 已经建立索引了，但是我没有办法搜索到这个域名。我以为是我操作时不小心动到了什么东西，让这个域名被污染了，于是，我又换到了 msqy.cc.cd。&lt;/p&gt;
+&lt;p&gt;问题依旧。Bing 死活不显示在搜索结果中。我也咨询了 Bing Webmaster Tools 团队好几次，他们也不说具体原因，只说“你的网站不符合规范，请根据文档进行操作”。没办法了，只好问 DeepSeek。DeepSeek &lt;s&gt;用最直接、最真相、最不绕弯、最扎心、最硬核、最干脆、最不墨迹、最戳痛点、最不留情面、最一针见血、最开门见山、最单刀直入、最不铺垫、最不客套、最不煽情、最不废话、最不拐弯、最不磨叽、最不装、最不端着、最不啰嗦、最不拖沓、最不委婉、最不掩饰、最不藏着掖着、最直白、最露骨、最实在、最通透、最毒辣、最爽快、最解气、最上头、最够劲、最过瘾、最粗暴、最有效、最狠、最准、最稳、最绝、最顶、最炸、最刚、最烈、最飒、最莽、最冲、最猛、最脆、最亮、最透、最干、最净、最利落、最霸道、最硬核、最生猛、最狂野、最直白、最粗暴、最不讲虚的、最不玩套路、最不搞形式、最不整虚头巴脑、最只讲干货、最只说重点、最只给结果、最只聊真相、最只谈核心、最只戳关键的方式来&lt;/s&gt;告诉我：&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;因为 cc.cd 的母域名 .cd 注册局早已瘫痪，过期域名无人清理、长期被滥用于垃圾站，Bing 直接判定其为高风险“僵尸域名池”，所以哪怕索引了也死都不会给你展示。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;虽然 Bing 没有证实这一点，但是这句话还是有道理的。&lt;/p&gt;
+&lt;p&gt;当然也有可能是我的网站建立时间太短了，权威性不高，但我已经等了两个月了！我之前有一个 cc.cd 域名，Bing 一索引就能搜索到。那时候能显示，大概是因为当时 Bing 的要求比较宽松吧。&lt;/p&gt;
+&lt;p&gt;要解决这个问题最简单的方法是：买一个 .com、.net 这样的域名，可惜要钱。&lt;/p&gt;
+&lt;p&gt;DeepSeek 推荐了 GitHub Pages 的默认域名 &amp;lt;yourusername&amp;gt;.github.io。这个域名背后是 GitHub，比较稳定，而且“是微软亲儿子”，Bing 的信任度可能比较高。&lt;/p&gt;
+&lt;p&gt;那就用 &amp;lt;yourusername&amp;gt;.github.io 吧，毕竟很多人都选这个。&lt;/p&gt;
+&lt;p&gt;但是，GitHub Pages 毕竟是国外平台，访问速度是大家有目共睹的慢。那怎么搞比较好？&lt;/p&gt;
+&lt;h2&gt;解决方案&lt;/h2&gt;
+&lt;p&gt;我想到了个绝佳的好方法：以 Github Pages 为主站，搜索引擎、友链交换都用这个；用更快的 Cloudflare Pages 部署博客，使用 cc.cd 域名作国内镜像站。&lt;/p&gt;
+&lt;p&gt;那该怎么提示中国大陆用户去镜像站呢？&lt;/p&gt;
+&lt;h3&gt;提示用户前往镜像站&lt;/h3&gt;
+&lt;p&gt;首先要解决提示信息何时出现的问题。&lt;/p&gt;
+&lt;p&gt;如果我们把提示信息组件放在 &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt; 里面，通过 JavaScript 控制显示隐藏，那么这个脚本可能会被浏览器最后加载，到了这时候，资源文件基本已经加载完了，再提示用户去镜像站就没有意义了。&lt;/p&gt;
+&lt;p&gt;那直接把组件和 JavaScript 嵌入到 &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt; 里吧。一般的浏览器都会最先加载 &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt; 部分，只要浏览器获取到了 html，那么浏览器必定能获取到内嵌的 JavaScript，不会被其他资源文件加载所阻塞。&lt;/p&gt;
+&lt;p&gt;至于在 JavaScript 显示组件的时机，应该是要获取到用户位置后立即显示，如果等 DOM 加载完成，那太晚了，资源文件可能已经加载好了。&lt;/p&gt;
+&lt;p&gt;获取用户位置，最简单的就是使用 IP 地址获取用户位置的 API 了。向 API 发送请求后，API 会返回带地区代码的数据。我们只要判断数据中的地区代码是否属于中国大陆即可。&lt;/p&gt;
+&lt;p&gt;知道了基本实现逻辑，那就可以直接写代码了。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// ip-banner.js
+// DeepSeek 写的，质量不咋地，但能用
+(function () {
+    const MIRROR_HOST = &apos;替换为你的镜像站&apos;;
+    const API_URL = &apos;替换为你的 api&apos;;
+
+    // 如果已经在镜像站，不再检测
+    if (window.location.hostname === MIRROR_HOST) return;
+
+    let isChina = false;
+    let requestFinished = false;
+    let bannerCreated = false;
+    //这里可能需要根据你的 api 返回数据修改
+    function handleResponse(data) {
+        const country = data.country || data.country_code || data.region || &apos;&apos;;
+        isChina = /中国|CN|China/i.test(country);
+        requestFinished = true;
+        // 请求返回后立即尝试创建横幅
+        tryCreateBanner();
+    }
+
+    // 立即发起 IP 请求（不等待 DOM）
+    const xhr = new XMLHttpRequest();
+    xhr.open(&apos;GET&apos;, API_URL, true);
+    xhr.timeout = 5000;
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            try {
+                const data = JSON.parse(xhr.responseText);
+                handleResponse(data);
+            } catch (_) { /* 忽略 */ }
+        }
+    };
+    xhr.onerror = xhr.ontimeout = function () { /* 静默失败 */ };
+    xhr.send();
+
+    // 轮询检测 body 是否可用，一旦可用立即创建
+    function tryCreateBanner() {
+        if (bannerCreated) return;
+        if (!isChina || !requestFinished) return;
+        if (!document.body) {
+            // body 尚未存在，20ms 后重试
+            setTimeout(tryCreateBanner, 20);
+            return;
+        }
+        // body 已存在，立即创建横幅
+        createBanner();
+        bannerCreated = true;
+    }
+
+    // 额外保障：如果请求返回时 body 未准备好，上面轮询会重试；
+    // 但如果脚本执行时 body 已经存在（极少情况），也要尝试
+    if (document.body &amp;amp;&amp;amp; document.readyState !== &apos;loading&apos;) {
+        // 如果 body 已经存在且不是加载中，尝试创建（但请求可能未完成）
+        // 我们可以先尝试，但会受 isChina 和 requestFinished 限制
+        // 所以无事可做，请求回调会触发 tryCreateBanner
+    }
+
+    function createBanner() {
+        const banner = document.createElement(&apos;div&apos;);
+        banner.id = &apos;msqy-banner&apos;;
+        banner.style.cssText = `
+            position: fixed;
+            top: .4rem;
+            left: .9rem;
+            right: .9rem;
+            z-index: 99999;
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--efu-card-bg, #fff);
+            color: var(--efu-fontcolor, #363636);
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            font-size: 14px;
+            font-family: system-ui, -apple-system, &apos;Segoe UI&apos;, Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border: var(--style-border, 1px solid var(--efu-card-border, #e3e8f7));
+            box-sizing: border-box;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(-10px);
+        `;
+
+        const textWrapper = document.createElement(&apos;span&apos;);
+        textWrapper.style.cssText = `
+            flex: 1;
+            line-height: 1.5;
+            color: var(--efu-fontcolor, #363636);
+        `;
+        textWrapper.innerHTML = `
+            🌏 检测到您在中国大陆，建议访问国内镜像站
+            &amp;lt;a href=&quot;https://${MIRROR_HOST}${window.location.pathname}${window.location.search}&quot;
+               style=&quot;color: var(--efu-blue, #425aef); font-weight: 600; text-decoration: none;&quot;&amp;gt;
+                ${MIRROR_HOST}
+            &amp;lt;/a&amp;gt;
+            ，速度更快。
+        `;
+
+        const closeBtn = document.createElement(&apos;button&apos;);
+        closeBtn.innerHTML = &apos;✕&apos;;
+        closeBtn.style.cssText = `
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--efu-secondtext, #a1a2b8);
+            padding: 4px 6px;
+            line-height: 1;
+            transition: color 0.2s;
+            flex-shrink: 0;
+        `;
+        closeBtn.addEventListener(&apos;mouseenter&apos;, () =&amp;gt; {
+            closeBtn.style.color = &apos;var(--efu-fontcolor, #363636)&apos;;
+        });
+        closeBtn.addEventListener(&apos;mouseleave&apos;, () =&amp;gt; {
+            closeBtn.style.color = &apos;var(--efu-secondtext, #a1a2b8)&apos;;
+        });
+        closeBtn.addEventListener(&apos;click&apos;, () =&amp;gt; {
+            banner.style.opacity = &apos;0&apos;;
+            banner.style.transform = &apos;translateY(-20px)&apos;;
+            setTimeout(() =&amp;gt; banner.remove(), 300);
+            // 不保存状态，刷新后重新出现
+        });
+
+        banner.appendChild(textWrapper);
+        banner.appendChild(closeBtn);
+        document.body.appendChild(banner);
+
+        requestAnimationFrame(() =&amp;gt; {
+            banner.style.opacity = &apos;1&apos;;
+            banner.style.transform = &apos;translateY(0)&apos;;
+        });
+    }
+})();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;将这段代码嵌入到 &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt; 里即可。&lt;/p&gt;
+&lt;p&gt;Solitude 主题自带了嵌入功能：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Extend
+# 扩展
+extends:
+  # Insert in head
+  # 插入到 head
+  head:
+    - &amp;lt;scripts&amp;gt;#在这里嵌入代码&amp;lt;/scripts&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这样，Hexo 在生成静态文件时，就会将这段嵌入到每个 html 文件的 &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt; 部分。&lt;/p&gt;
+&lt;h3&gt;部署&lt;/h3&gt;
+&lt;p&gt;代码准备好了，接下来就是部署到 GitHub Pages 上了。我建议新建一个名为 &amp;lt;yourusername&amp;gt;.github.io 的仓库，将静态文件上传至该仓库，在仓库设置中开启 GitHub Pages。这样博客就会部署到根目录下，不用担心资源文件路径引用问题。&lt;/p&gt;
+&lt;p&gt;Hexo 有一个 &lt;code&gt;hexo deploy&lt;/code&gt; 命令，能帮你自动把资源文件上传到仓库，特别方便，只要先安装 &lt;code&gt;hexo-deployer-git&lt;/code&gt; 插件：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install hexo-deployer-git --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add hexo-deployer-git
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add hexo-deployer-git
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在 Hexo 配置文件中设置：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;deploy:
+  type: git
+  repo: &amp;lt;repository url&amp;gt; # https://bitbucket.org/JohnSmith/johnsmith.bitbucket.io
+  branch: [branch]
+  message: [message]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;之后直接 &lt;code&gt;hexo deploy&lt;/code&gt; 即可。&lt;/p&gt;
+&lt;p&gt;Cloudflare Pages 可以直接关联 &amp;lt;yourusername&amp;gt;.github.io 仓库，也可以新建一个源码仓库，通过源码构建部署。&lt;/p&gt;
+&lt;h3&gt;Bing 收录与 SEO 优化&lt;/h3&gt;
+&lt;p&gt;如果有两个内容相似的网站的话，Bing 会降低网站的排名。&lt;/p&gt;
+&lt;p&gt;不过要解决这个问题很简单，只要在 html 文件的 &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt; 插入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&amp;lt;link rel=&quot;canonical&quot; href=&quot;你的主网站域名&quot; /&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;即可。Bing 会优先索引你的主网站，镜像站不会被收录。&lt;/p&gt;
+&lt;p&gt;如果是 Hexo 博客，只要将配置文件中的&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;url: 你的主网站
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;改为你的主网站即可。Hexo 在构建时会自动加入上述标签。&lt;/p&gt;
+&lt;p&gt;至于 &amp;lt;yourusername&amp;gt;.github.io 的收录情况，我会在这里更新。&lt;/p&gt;
+&lt;h3&gt;结尾&lt;/h3&gt;
+&lt;p&gt;折腾了大半天，终于解决了博客的域名问题。但愿能被 Bing 收录吧。不过收不收录也无所谓了，毕竟我一开始选择 &amp;lt;yourusername&amp;gt;.github.io 作主域名，也只是看中它更稳定罢了。&lt;/p&gt;
+</content:encoded></item><item><title>逃离流媒体，回到本地音乐 - 本地音乐软件推荐</title><link>https://msqy-h.github.io/posts/native-music/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/native-music/</guid><description>受够了国内的流媒体音乐？试试本地音乐，获得更纯粹的音乐体验。</description><pubDate>Wed, 05 Aug 2026 14:14:00 GMT</pubDate><content:encoded>&lt;h2&gt;碎碎念&lt;/h2&gt;
+&lt;p&gt;随着网络的发展，许多流媒体音乐软件出现了。国内有 QQ 音乐、网易云音乐，国外有 Spotify、Apple Music。不可否认，它们让我们听歌方便了许多。&lt;/p&gt;
+&lt;p&gt;但是，不知道从什么时候起，我听歌变成了把手机装上稳定器，接上鼠标，打开软件，卡顿几秒钟，小心翼翼地点掉广告，打开搜索，在各种各样的 DJ 版、深情版中找到我真正想要的版本，点击歌曲，发现要开会员，忍痛付费，发现不是最高音质，再开个更高级的会员，却发现是假无损，还是有沙沙声。&lt;/p&gt;
+&lt;p&gt;过了一会，想听另一首歌，去搜索，只看到“该歌曲暂无版权”，只好退出软件，打开另一个软件，重复上面的操作，还是假无损。&lt;/p&gt;
+&lt;p&gt;花了双倍的价钱，搞到的却是一半的质量。这谁受得了？&lt;/p&gt;
+&lt;p&gt;后来也发现了国外的音乐软件，那好很多，但是 Spotify 不能在中国直接用，Apple Music 虽然音质好，软件纯净，但是曲库偏少。不过如果只听主流歌手或者欧美歌曲，Apple Music 也够用了。&lt;/p&gt;
+&lt;p&gt;受不了的我只好转到本地音乐。&lt;/p&gt;
+&lt;p&gt;本地音乐真是好太多了！&lt;/p&gt;
+&lt;h2&gt;本地音乐&lt;/h2&gt;
+&lt;p&gt;本地音乐到底有什么好？&lt;/p&gt;
+&lt;p&gt;简单地说，就是有流媒体音乐没有的优点。&lt;/p&gt;
+&lt;p&gt;纯净的体验、极高的音质、不用担心的流量，让人真正地投入到音乐中。&lt;/p&gt;
+&lt;p&gt;虽说下载新歌比较麻烦，但一劳永逸，下载后想听多少遍都可以，直到听腻。&lt;/p&gt;
+&lt;p&gt;下面是我推荐的安卓听歌软件。&lt;/p&gt;
+&lt;h2&gt;软件&lt;/h2&gt;
+&lt;h3&gt;Salt Player&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&quot;/images/native-music/saltplayer.webp&quot; alt=&quot;Salt Player 的界面&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;Salt Player 是很好用的播放器，颜值高，功能比较多，而且在最近的版本支持了 USB 独占，非常推荐。&lt;/p&gt;
+&lt;p&gt;{% link &apos;Salt Player&apos; &apos;Official 渠道（境内用户推荐）：OPPO…&apos; &apos;https://moriafly.com/program/salt-player.html&apos; %}&lt;/p&gt;
+&lt;h3&gt;Poweramp&lt;/h3&gt;
+&lt;p&gt;Poweramp 很有名，挺专业的，界面比较硬核，音质也挺好，自定义功能多，适合喜欢折腾的。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/native-music/poweramp.webp&quot; alt=&quot;Poweramp 的界面&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;{% link &apos;Poweramp: Android…&apos; &apos;Poweramp is a powerful …&apos; &apos;http://powerampapp.com/&apos; %}&lt;/p&gt;
+&lt;h3&gt;PixelPlayer&lt;/h3&gt;
+&lt;p&gt;Material 3 风格，好看，功能比较多。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/native-music/pixelplayer.webp&quot; alt=&quot;PixelPlayer 的界面&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;{% github &apos;PixelPlayerHQ/PixelPlayer&apos; %}&lt;/p&gt;
+&lt;h3&gt;AIMP&lt;/h3&gt;
+&lt;p&gt;很不错的播放器，界面也比较硬核，功能多。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/native-music/aimp.webp&quot; alt=&quot;AIMP 的界面&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;{% link &apos;AIMP&apos; &apos;Cumulative updates for …&apos; &apos;http://aimp.ru/&apos; %}&lt;/p&gt;
+&lt;h3&gt;Flamingo&lt;/h3&gt;
+&lt;p&gt;仿 Apple Music 的播放器，歌词效果非常好看。未正式发布，安装包难找一点，不过可以在作者的 Bilibili 或者 Telegram 频道上面找到。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/native-music/flamingo.webp&quot; alt=&quot;Flamingo 的界面&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;{% link &apos;Bilibili: Flamingo 更新内容…&apos; &apos;Flamingo 是一款使…&apos; &apos;https://www.bilibili.com/video/BV1aSgWzYEdo&apos; %}&lt;/p&gt;
+&lt;h2&gt;结尾&lt;/h2&gt;
+&lt;p&gt;想纯粹地听歌？本地音乐可能是最好的选择之一。&lt;/p&gt;
+&lt;p&gt;&lt;s&gt;感觉这篇文章挺水的&lt;/s&gt;如果我发现了什么好歌，也会分享给大家，欢迎一起听歌。&lt;/p&gt;
+</content:encoded></item><item><title>Termux 配置 zsh 以及简单美化记录</title><link>https://msqy-h.github.io/posts/termux-zsh/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/termux-zsh/</guid><description>Termux 配置 zsh 和 美化的记录，让 Termux 更好看</description><pubDate>Sat, 25 Jul 2026 15:58:00 GMT</pubDate><content:encoded>&lt;h2&gt;写在前面&lt;/h2&gt;
+&lt;p&gt;众所周知，Termux 是安卓手机上最好用的终端模拟器之一。我这个博客在写代码时就是用 Termux 预览的。&lt;s&gt;也就只有我这种人会用手机写代码了（笑）&lt;/s&gt;&lt;/p&gt;
+&lt;p&gt;但是，Termux 默认样式太丑了，还没有自动补全，有点麻烦。还是把 shell 换成 zsh 方便点，顺便安装 Oh My Zsh，好好美化一下。&lt;/p&gt;
+&lt;p&gt;这篇文章用作备忘，参考&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://zhuanlan.zhihu.com/p/1956286037249757963&quot; title=&quot;［ Termux | Zsh |…&quot; description=&quot;如果你发现自己的终端中有很多乱码…&quot;}&lt;/p&gt;
+&lt;h2&gt;效果图&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/images/termux-zsh/result.webp&quot; alt=&quot;效果图&quot; /&gt;&lt;/p&gt;
+&lt;h2&gt;配置方法&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+配置方法可能因软件更新而不同，请注意检查版本号。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;开发环境：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Termux 0.118.3&lt;/li&gt;
+&lt;li&gt;zsh 5.9.1 (aarch64-unknown-linux-android)&lt;/li&gt;
+&lt;li&gt;Oh My Zsh version master (e1d1f0d)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;你需要准备：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;可以上网和运行终端的安卓设备&lt;/li&gt;
+&lt;li&gt;脑子&lt;/li&gt;
+&lt;li&gt;手&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;让我们开始吧。&lt;/p&gt;
+&lt;h3&gt;1. 安装 zsh&lt;/h3&gt;
+&lt;p&gt;安装 zsh 十分简单，直接&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;pkg install zsh
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;即可。如果下载时间过久，使用 &lt;code&gt;termux-change-repo&lt;/code&gt; 切换仓库镜像。在弹出的页面选择 &lt;code&gt;Mirror group&lt;/code&gt;，再选择 &lt;code&gt;Mirrors in Chinese&lt;/code&gt;。&lt;/p&gt;
+&lt;h3&gt;2. 安装 Oh My Zsh&lt;/h3&gt;
+&lt;p&gt;输入&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;sh -c &quot;$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;由于 GitHub 服务器在国外，访问速度慢，可能需要使用代理。后面也会使用到 GitHub，注意网络环境。&lt;/p&gt;
+&lt;p&gt;安装时会询问 &lt;code&gt;Do you want to change your default shell to zsh?&lt;/code&gt;，直接按回车即可。&lt;/p&gt;
+&lt;h3&gt;3. 安装 Powerlevel10k 主题&lt;/h3&gt;
+&lt;p&gt;输入&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git clone --depth=1 [https://github.com/romkatv/powerlevel10k.git](https://link.zhihu.com/?target=https%3A//github.com/romkatv/powerlevel10k.git) &quot;${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;git clone --depth=1 https://gitee.com/romkatv/powerlevel10k.git &quot;${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;中国大陆建议使用 Gitee 源。&lt;/p&gt;
+&lt;h3&gt;4. 安装插件&lt;/h3&gt;
+&lt;p&gt;最好在配置之前先安装插件。&lt;/p&gt;
+&lt;p&gt;推荐几个我用的插件：&lt;/p&gt;
+&lt;h4&gt;- zsh-autosuggestions&lt;/h4&gt;
+&lt;p&gt;能够提供输入建议，在输入时有灰色建议，按向右箭头即可补全。&lt;/p&gt;
+&lt;p&gt;安装方式：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-autosuggestions
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;- zsh-syntax-highlighting&lt;/h4&gt;
+&lt;p&gt;用来语法高亮，如果命令拼写错，会显示为红色。&lt;/p&gt;
+&lt;p&gt;安装方式：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-syntax-highlighting
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;- zsh-completions&lt;/h4&gt;
+&lt;p&gt;按 {% keyboard &apos;Tab&apos; %}，可以显示子命令列表，快速补全你要的子命令。&lt;/p&gt;
+&lt;p&gt;安装方式：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;git clone https://github.com/zsh-users/zsh-completions.git ${ZSH_CUSTOM:-${ZSH:-~/.oh-my-zsh}/custom}/plugins/zsh-completions
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h2&gt;5. 配置&lt;/h2&gt;
+&lt;p&gt;Zsh 的配置文件是 &lt;code&gt;home&lt;/code&gt; 目录下的 &lt;code&gt;.zshrc&lt;/code&gt; 文件。打开这个文件。&lt;/p&gt;
+&lt;p&gt;这里说一下打开 Termux 的 &lt;code&gt;home&lt;/code&gt; 目录文件的方法：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用命令行文本编辑器：我常用 Nano 和 Neovim。&lt;/li&gt;
+&lt;li&gt;使用 MT管理器：打开 MT管理器侧边栏，点击侧边栏右上角三个点，可以添加本地存储。点击后会弹出安卓文件管理器，选择侧边栏中的 Termux 即可。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;找到 &lt;code&gt;ZSH_THEME&lt;/code&gt; 变量，改为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;ZSH_THEME=&quot;powerlevel10k/powerlevel10k&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;找到 &lt;code&gt;plugins&lt;/code&gt; 变量，这里是 zsh 的插件配置，安装了插件后要在这里启用。将已安装的插件填进去，每个插件一行，或者使用空格隔开，像这样：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;plugins=(
+  git
+  sudo
+  zsh-autosuggestions
+  zsh-syntax-highlighting
+  zsh-completions
+)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;code&gt;git&lt;/code&gt; 和 &lt;code&gt;sudo&lt;/code&gt; 是 zsh 自带的，可以不用安装&lt;/p&gt;
+&lt;p&gt;配置完后，使用 &lt;code&gt;zsh ~/.zshrc&lt;/code&gt; 或者直接重启 Termux 使配置生效。&lt;/p&gt;
+&lt;h3&gt;6. 设置 Termux 字体与颜色&lt;/h3&gt;
+&lt;p&gt;由于 powerlevel10k 主题使用的图标依赖字体，这里在配置主题前先设置 Termux 的字体。&lt;/p&gt;
+&lt;p&gt;替换 Termux 的字体过于麻烦，建议安装 Termux:Styling 插件。&lt;/p&gt;
+&lt;p&gt;你还记得你的 Termux 是在哪里下载的吗？如果是在 GitHub 下载的，那么插件也要在 GitHub 下载；F-Droid 同理；如果是在 Google Play 下的，那你还是换回前面两个渠道下载好一点，不是不能用，而是版本可能比较旧，安装一些包会有问题。&lt;/p&gt;
+&lt;p&gt;给出下载链接：&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://github.com/termux/termux-styling&quot; title=&quot;GitHub - termux…&quot; description=&quot;A Termux add-on app to customize…&quot;}&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://f-droid.org/packages/com.termux.styling/&quot; title=&quot;F-Droid - Termux…&quot; description=&quot;Termux:Styling Customize…&quot;}&lt;/p&gt;
+&lt;p&gt;安装好后，打开 Termux，长按任意一条输出，点击 &lt;code&gt;MORE&lt;/code&gt;，选择 &lt;code&gt;Style&lt;/code&gt;，点击 &lt;code&gt;CHOOSE FONT&lt;/code&gt; 或 &lt;code&gt;CHOOSE COLOR&lt;/code&gt; 就可以更改字体和颜色了。&lt;/p&gt;
+&lt;p&gt;我建议使用列表中的 Hack 字体，这个字体基本上有主题需要的所有图标，看着也很舒服。&lt;/p&gt;
+&lt;p&gt;配色我比较喜欢 &lt;code&gt;Base 16 Google Dark&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;这些看个人喜好，自己喜欢的就可以。&lt;/p&gt;
+&lt;h3&gt;7. 配置 powerlevel10k 主题&lt;/h3&gt;
+&lt;p&gt;输入&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;p10k configure
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;就会进入配置页面。&lt;/p&gt;
+&lt;p&gt;第一个是否安装字体选择 n 即可，因为已经设置了支持 powerlevel10k 主题需要用的图标的字体。选择图标数量那里，建议选择 &lt;code&gt;Many icons&lt;/code&gt;，不然就跟普通主题没啥区别了，当然你想简洁一点也可以。其他配置看个人喜好。&lt;/p&gt;
+&lt;p&gt;配置完成后，就可以了。你也可以输入 &lt;code&gt;p10k configure&lt;/code&gt; 重新配置。&lt;/p&gt;
+&lt;h2&gt;结尾&lt;/h2&gt;
+&lt;p&gt;这篇文章写了 Termux 配置 zsh 和 powerlevel10k 主题的方式。Termux 现在好看多了。&lt;/p&gt;
+&lt;p&gt;说到 Termux，以后我打算写写 Neovim 的安装和懒人配置方式。:spoilerblock[在手机用 Neovim？感觉有点豪了]&lt;/p&gt;
+</content:encoded></item><item><title>Minecraft 基岩版光线追踪配置实录</title><link>https://msqy-h.github.io/posts/minecraft-rtx/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/minecraft-rtx/</guid><description>Minecraft 基岩版光线追踪的配置记录与教程，提取官方资源包并应用到游戏中</description><pubDate>Tue, 14 Jul 2026 15:09:00 GMT</pubDate><content:encoded>&lt;h2&gt;写在前面&lt;/h2&gt;
+&lt;p&gt;之前微软为 Minecraft 基岩版添加了光线追踪，但不知什么原因，成了半成品，现在被灵动视效取代了😭。:spoiler[微软发力了]&lt;/p&gt;
+&lt;p&gt;我还是更喜欢光线追踪。光线追踪的配置其实挺麻烦的，所以在这里写个教程，做个备忘。&lt;/p&gt;
+&lt;h2&gt;效果图&lt;/h2&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/result.webp&quot; alt=&quot;效果图&quot; /&gt;&lt;/p&gt;
+&lt;h2&gt;配置方法&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+游戏版本为 26.33，理论上支持光线追踪的版本（1.16.200 以后）均可用。基岩版更新十分频繁，如果该方法不可用，可以通过&lt;a href=&quot;mailto:Hydroxid_Hualin@outlook.com&quot;&gt;电子邮件&lt;/a&gt;联系我。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;1. 下载官方模板&lt;/h3&gt;
+&lt;p&gt;在商店中搜索 &lt;strong&gt;RTX&lt;/strong&gt;，下载官方模板。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/download.webp&quot; alt=&quot;搜索 RTX&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;个人比较喜欢 Color, light and shadow RTX，偏现代一点。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/rtx.webp&quot; alt=&quot;Color, light and shadow RTX&quot; /&gt;&lt;/p&gt;
+&lt;h3&gt;2. 找到资源包&lt;/h3&gt;
+&lt;p&gt;下载并创建世界后，打开 &lt;code&gt;C:\Users\你的用户名\AppData\Roaming\Minecraft Bedrock\premium_cache\world_templates\&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;接着会有好几个乱码的文件夹。不必理会，打开后点一下里面的图片，就知道是什么模板了。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/template.webp&quot; alt=&quot;模板文件夹&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;找到想要的模板文件夹，打开 &lt;code&gt;resource_packs\rp0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;你可能会看到类似这些文件：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/resource_pack.webp&quot; alt=&quot;资源包&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;全选，压缩为 &lt;code&gt;.zip&lt;/code&gt; 格式。更改后缀名为 &lt;code&gt;.mcpack&lt;/code&gt;。双击导入到 Minecraft。&lt;/p&gt;
+&lt;h3&gt;3. 启用资源包&lt;/h3&gt;
+&lt;p&gt;进入 Minecraft，找到想应用光追的世界，点击编辑世界，启用刚刚导入的资源包，像这样就可以了。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/minecraft-rtx/enable.webp&quot; alt=&quot;启用&quot; /&gt;&lt;/p&gt;
+&lt;h3&gt;4. 启用光线追踪&lt;/h3&gt;
+&lt;p&gt;进入世界，打开显示设置，选择画面为光线追踪。返回，完成！&lt;/p&gt;
+&lt;h2&gt;总结&lt;/h2&gt;
+&lt;p&gt;实际上，我们也可以改用第三方的资源包，这样更方便，双击导入就可以了。不过本人更喜欢官方的光追，所以就写了这么一篇操作方法。&lt;/p&gt;
+&lt;p&gt;享受 Minecraft 吧！&lt;/p&gt;
+&lt;p&gt;✨&lt;/p&gt;
+</content:encoded></item><item><title>Hexo Solitude 博客懒加载的问题与解决</title><link>https://msqy-h.github.io/posts/hexo-lazyload/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/hexo-lazyload/</guid><description>Hexo Solitude 主题懒加载功能的问题与解决方案</description><pubDate>Sun, 12 Jul 2026 17:47:00 GMT</pubDate><content:encoded>&lt;h2&gt;写在前面&lt;/h2&gt;
+&lt;p&gt;配置过 Solitude 主题的都知道， Solitude 主题有图片懒加载功能。配置如下：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# 其他内容
+lazyload:
+  enable: true
+  field: site
+  placeholder: &quot;&quot;
+  errorimg: /img/error_load.webp
+# 其他内容
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在我的环境下：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Node.js 版本：24.17.0&lt;/li&gt;
+&lt;li&gt;Yarn 版本：4.17.0&lt;/li&gt;
+&lt;li&gt;Hexo 版本：7.3.0&lt;/li&gt;
+&lt;li&gt;Solitude 版本：3.0.21&lt;/li&gt;
+&lt;li&gt;预览方式：&lt;code&gt;hexo g &amp;amp;&amp;amp; npx serve public&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;field&lt;/code&gt; 配置为 &lt;code&gt;post&lt;/code&gt; 时，图片懒加载完全没问题，只是文章以外的其它页面就没有懒加载。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;field&lt;/code&gt; 配置为 &lt;code&gt;site&lt;/code&gt; 时，网站就会崩溃，就跟我的单页网站缺少了 js 一样，什么都点不了。&lt;/p&gt;
+&lt;p&gt;我们想要完整的图片懒加载，怎么办？&lt;/p&gt;
+&lt;h2&gt;解决方案&lt;/h2&gt;
+&lt;h3&gt;1. 使用 &lt;code&gt;post&lt;/code&gt; 模式&lt;/h3&gt;
+&lt;p&gt;懒得改主题源码，就用 &lt;code&gt;post&lt;/code&gt; 模式吧。&lt;/p&gt;
+&lt;p&gt;但是，愿意折腾的我们，怎么能安于现状？&lt;/p&gt;
+&lt;h3&gt;2. 修改主题源码&lt;/h3&gt;
+&lt;p&gt;打开 &lt;code&gt;博客根目录/themes/solitude/scripts/filter/lazyload.js&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;源代码直接使用正则表达式操作 html 实现懒加载：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;// 其他内容
+const lazyload = (content, img) =&amp;gt; {
+    return content.replace(/(&amp;lt;img(?!.*?class[\t]*=[\t]*[&apos;&quot;].*?nolazyload.*?[&apos;&quot;]).*? src=)/gi, `$1 &quot;${img}&quot; data-lazy-src=`)
+}
+// 其他内容
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;html 千变万化，正则可能破坏掉 html 标签导致页面出现错误，可能波及 &lt;code&gt;&amp;lt;scripts&amp;gt;&lt;/code&gt; 标签。:spoiler[&apos;祖传代码发力了（&apos;]&lt;/p&gt;
+&lt;p&gt;至于 &lt;code&gt;post&lt;/code&gt; 模式能用，应该是因为 &lt;code&gt;post&lt;/code&gt; 模式处理的文章界面相对简单，正则刚好可以处理&lt;/p&gt;
+&lt;p&gt;所以要换种处理方式，用 &lt;code&gt;cheerio&lt;/code&gt; 这种成熟的处理 html 的库。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+以下代码针对我的开发环境编写，不一定通用，并非官方方案，此脚本仅作参考。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+以下代码由 DeepSeek 编写&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;npm install cheerio --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add cheerio
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add cheerio
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后将 &lt;code&gt;博客根目录/themes/solitude/scripts/filter/lazyload.js&lt;/code&gt; 全部替换为以下代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;&apos;use strict&apos;
+
+const cheerio = require(&apos;cheerio&apos;);
+
+const lazyload = (content, imgUrl) =&amp;gt; {
+  const $ = cheerio.load(content, { decodeEntities: false });
+  // 选取所有 img，排除带有 nolazyload 类的图片
+  $(&apos;img:not(.nolazyload)&apos;).each((i, el) =&amp;gt; {
+    const $el = $(el);
+    const src = $el.attr(&apos;src&apos;);
+    // 跳过 base64、svg 或已经带 data-lazy-src 的图片
+    if (src &amp;amp;&amp;amp; !src.startsWith(&apos;data:&apos;) &amp;amp;&amp;amp; !$el.attr(&apos;data-lazy-src&apos;)) {
+      $el.attr(&apos;data-lazy-src&apos;, src); // 存真实地址
+      $el.attr(&apos;src&apos;, imgUrl);        // 替换为占位图
+    }
+  });
+  return $.html();
+}
+
+// 注册全站过滤器 (site)
+hexo.extend.filter.register(&apos;after_render:html&apos;, function (data) {
+  const { enable, placeholder, field } = hexo.theme.config.lazyload;
+  if (!enable || field !== &apos;site&apos;) return;
+  return lazyload(data, placeholder);
+});
+
+// 保留 post 过滤器（以防你切换）
+hexo.extend.filter.register(&apos;after_post_render&apos;, data =&amp;gt; {
+  const { enable, placeholder, field } = hexo.theme.config.lazyload;
+  if (!enable || field !== &apos;post&apos;) return;
+  data.content = lazyload(data.content, placeholder);
+  return data;
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;然后预览：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hexo cl
+hexo g
+npx serve public
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;现在懒加载正常了！🎉🎉🎉&lt;/p&gt;
+&lt;h2&gt;总结&lt;/h2&gt;
+&lt;p&gt;经过我们的不懈努力，Hexo Solitude 主题的懒加载终于正常了！&lt;/p&gt;
+&lt;p&gt;这个问题根源在于正则不适合处理 html，而主题刚好采用了这种方式。也许在别人那刚好能用，到我这里刚好用不了吧。&lt;/p&gt;
+&lt;p&gt;✨&lt;/p&gt;
+</content:encoded></item><item><title>Hexo Solitude 的本地预览问题与解决方案</title><link>https://msqy-h.github.io/posts/hexo-preview/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/hexo-preview/</guid><description>Hexo Solitude 主题外挂标签在本地预览时样式丢失的解决思路</description><pubDate>Fri, 10 Jul 2026 17:25:50 GMT</pubDate><content:encoded>&lt;p&gt;&amp;lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css&quot;&amp;gt;&lt;/p&gt;
+&lt;h2&gt;写在前面&lt;/h2&gt;
+&lt;p&gt;配置 Solitude 主题时，我遇到了个天大的问题。&lt;/p&gt;
+&lt;p&gt;Solitude 主题是支持 Hexo 内置的标签语法和 Solitude 的扩展标签。不过，扩展标签要装插件。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install hexo-solitude-tag --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add hexo-solitude-tag
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add hexo-solitude-tag
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;很简单。具体的语法，请看官方文档。:spoiler[话说为什么是放在 demo 而不是文档啊]&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://everfu.github.io/solitude-demo/posts/8f9926b7.html&quot; title=&quot;外挂标签使用 | Solitude&quot; description=&quot;这篇文章介绍了外挂标签的使用。&quot;}&lt;/p&gt;
+&lt;p&gt;但是，遇到了问题。&lt;/p&gt;
+&lt;h2&gt;大问题&lt;/h2&gt;
+&lt;p&gt;正当我兴致十足，执行了 Hexo 三连，打开了 &lt;code&gt;localhost:3000&lt;/code&gt; 后：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hexo cl &amp;amp;&amp;amp; hexo g &amp;amp;&amp;amp; hexo s
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;没想到，标签的样式竟然消失了！&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!NOTE]
+由于 Fuwari 暂不支持 Hexo 标签，这里可能无法正常渲染&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;本来这是个按钮：&lt;/p&gt;
+&lt;p&gt;{% button &apos;fa-brands fa-github&apos; &apos;我的GitHub&apos; &apos;https://github.com/MSQY-H&apos; %}&lt;/p&gt;
+&lt;p&gt;结果变成了：&lt;/p&gt;
+&lt;p&gt;&amp;lt;i class=&quot;fa-brands fa-github&quot;&amp;gt;&amp;lt;/i&amp;gt;我的GitHub&lt;/p&gt;
+&lt;p&gt;那可难搞了。&lt;/p&gt;
+&lt;h2&gt;解决方案&lt;/h2&gt;
+&lt;p&gt;经过与B大哥与D大哥两位好朋友的探讨研究后，我终于发现了问题。&lt;/p&gt;
+&lt;p&gt;问题在于 &lt;code&gt;hexo s&lt;/code&gt;。它的生成机制与 &lt;code&gt;hexo g&lt;/code&gt; 不同，可能内部会与插件产生冲突。&lt;/p&gt;
+&lt;p&gt;其实不止我一个人有这个问题，网上很多人在使用插件时也有类似问题。&lt;/p&gt;
+&lt;h3&gt;手敲命令&lt;/h3&gt;
+&lt;p&gt;其实要解决这个问题很简单，只要分别输入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hexo g
+npx serve public
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;就可以了。（不一定要用 &lt;code&gt;npx serve public&lt;/code&gt;，其他可以启动服务器的命令也可以）&lt;/p&gt;
+&lt;p&gt;其实原理非常简单：虽然 &lt;code&gt;hexo s&lt;/code&gt; 实现机制太过复杂，可能会出现问题，但是 &lt;code&gt;hexo g&lt;/code&gt; 不会有这个问题（要是问题还在，就检查一下代码或者给开发者提 issue 吧）&lt;/p&gt;
+&lt;p&gt;所以我们曲线救国：通过 &lt;code&gt;hexo g&lt;/code&gt; 生成静态文件，再通过 &lt;code&gt;npx serve public&lt;/code&gt; 启动本地服务器。&lt;/p&gt;
+&lt;p&gt;问题解决了，完美！&lt;/p&gt;
+&lt;p&gt;但是，这种方式有缺点：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;没有文件监听，每次都要手动敲，太麻烦了！&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;万物皆可脚本&lt;/h3&gt;
+&lt;p&gt;&lt;s&gt;因为懒&lt;/s&gt;为了让生活更方便，我 Vibe Coding了一下，和D大哥聊了 15 分钟，写了个脚本。&lt;/p&gt;
+&lt;p&gt;其实这个脚本核心逻辑是这样的：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;使用 chokidar 监听文件变动&lt;/li&gt;
+&lt;li&gt;执行 &lt;code&gt;hexo g --incremental&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;启动静态服务器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+以下脚本针对我的开发环境编写，不一定通用，并非官方方案，此脚本仅作参考，建议你自己 Vibe Coding。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+以下代码由 DeepSeek 编写&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;Node.js 版本：24.17.0&lt;/li&gt;
+&lt;li&gt;Yarn 版本：4.17.0&lt;/li&gt;
+&lt;li&gt;Hexo 版本：7.3.0&lt;/li&gt;
+&lt;li&gt;Solitude 版本：3.0.21&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre&gt;&lt;code&gt;const { spawn, execSync } = require(&apos;child_process&apos;);
+const fs = require(&apos;fs&apos;);
+const path = require(&apos;path&apos;);
+const os = require(&apos;os&apos;);
+const chokidar = require(&apos;chokidar&apos;);
+const express = require(&apos;express&apos;);
+const serveStatic = require(&apos;serve-static&apos;);
+
+// ---------- 参数解析 ----------
+let PORT = 3000;
+let silent = false;
+let quickMode = false;
+let directServe = false;   // 新增：直接启动服务器，跳过首次构建
+
+const args = process.argv.slice(2);
+for (let i = 0; i &amp;lt; args.length; i++) {
+  const arg = args[i];
+  if (arg === &apos;-h&apos; || arg === &apos;--help&apos;) {
+    console.log(`
+使用方法: node dev.js [端口] [选项]
+
+选项:
+  -s, --silent    静默模式，不输出 hexo 日志（错误除外）
+  -q, --quick     快速模式，省略手动添加的延迟（防抖延迟除外）
+  -d, --direct    直接启动服务器，跳过首次构建（适用于已生成 public 的情况）
+  -h, --help      显示此帮助信息
+
+示例:
+  node dev.js 4000
+  node dev.js -s 4000
+  node dev.js -q -d
+`);
+    process.exit(0);
+  } else if (arg === &apos;-s&apos; || arg === &apos;--silent&apos;) {
+    silent = true;
+  } else if (arg === &apos;-q&apos; || arg === &apos;--quick&apos;) {
+    quickMode = true;
+  } else if (arg === &apos;-d&apos; || arg === &apos;--direct&apos;) {
+    directServe = true;
+  } else if (/^\d+$/.test(arg) &amp;amp;&amp;amp; PORT === 3000) {
+    PORT = parseInt(arg, 10);
+  }
+}
+
+const CWD = process.cwd();
+const PUBLIC_DIR = path.join(CWD, &apos;public&apos;);
+const WATCH_PATHS = [
+  &apos;source&apos;,
+  &apos;_config.yml&apos;,
+  &apos;scaffolds&apos;,
+  &apos;themes&apos;,
+  &apos;package.json&apos;,
+];
+
+const DEBOUNCE_DELAY = 300;
+const BAR_LENGTH = 20;
+const BOUNCE_WIDTH = 3;
+const FRAME_ACTIVE = 100;
+const FRAME_IDLE = 500;
+const FILL_STAY = quickMode ? 0 : 500;
+const SPINNER_FRAMES = [&apos;⠋&apos;, &apos;⠙&apos;, &apos;⠹&apos;, &apos;⠸&apos;, &apos;⠼&apos;, &apos;⠴&apos;, &apos;⠦&apos;, &apos;⠧&apos;, &apos;⠇&apos;, &apos;⠏&apos;];
+
+// ---------- 状态变量 ----------
+let isBuilding = false;
+let buildTimer = null;
+let server = null;           // 存储 http.Server 实例
+let watcher = null;
+let lastBuildFailed = false;
+let watcherReady = false;
+
+let sliderWidth = BOUNCE_WIDTH;
+let sliderPos = 0;
+let dir = 1;
+let progressMode = &apos;bounce&apos;;
+let renderTimeout = null;
+let spinnerIdx = 0;
+let pendingLogs = [];
+let currentBuildProcess = null;
+
+let initializing = false;
+let serverStarting = false;
+let buildStartTime = 0;
+let firstBuild = false;
+let hexoErrorContext = false;  // 错误上下文标志
+
+// ---------- 颜色常量 ----------
+const RESET = &apos;\x1b[0m&apos;;
+const BG_BUILD = &apos;\x1b[48;5;208m\x1b[30m&apos;;
+const BG_RUN   = &apos;\x1b[42m\x1b[37m&apos;;
+const BG_FAIL  = &apos;\x1b[41m\x1b[37m&apos;;
+const BG_INIT  = &apos;\x1b[44m\x1b[37m&apos;;
+
+const LEVEL_COLORS = {
+  INFO:  &apos;\x1b[36m&apos;,
+  WARN:  &apos;\x1b[33m&apos;,
+  ERROR: &apos;\x1b[31m&apos;,
+  HEXO_ERROR: &apos;\x1b[31m&apos;,
+  SUCCESS:&apos;\x1b[32m&apos;,
+  DEBUG: &apos;\x1b[35m&apos;,
+};
+
+// ---------- 工具函数 ----------
+function formatTime(seconds) {
+  if (seconds &amp;gt;= 60) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}m${secs}s`;
+  }
+  return `${seconds.toFixed(1)}s`;
+}
+
+function getProgressBar() {
+  const bg = &apos;-&apos;, fg = &apos;#&apos;;
+  if (progressMode === &apos;fill&apos;) return fg.repeat(BAR_LENGTH);
+  const w = Math.round(sliderWidth);
+  const pos = Math.round(sliderPos);
+  let bar = &apos;&apos;;
+  for (let i = 0; i &amp;lt; BAR_LENGTH; i++) bar += (i &amp;gt;= pos &amp;amp;&amp;amp; i &amp;lt; pos + w) ? fg : bg;
+  return bar;
+}
+
+// ---------- 统一日志系统 ----------
+function flushLogs() {
+  if (!pendingLogs.length) return;
+  const lines = [...pendingLogs];
+  pendingLogs = [];
+  process.stdout.write(&apos;\r\x1b[K&apos;);
+  lines.forEach(l =&amp;gt; console.log(l));
+}
+
+const YARN_PATTERN = /This project is configured to use yarn/i;
+
+function outputLog(category, levelOrType, message, extra = {}) {
+  if (category === &apos;hexo&apos;) {
+    let line = message.trimEnd();
+    if (!line || YARN_PATTERN.test(line)) return;
+
+    const match = line.match(/^(INFO|WARN|ERROR|DEBUG)\s+(.*)/i);
+    let level = &apos;INFO&apos;, msg = line;
+    if (match) { level = match[1].toUpperCase(); msg = match[2]; }
+
+    if (/\b(FATAL|YAMLException)\b/i.test(line)) {
+      level = &apos;ERROR&apos;;
+    }
+
+    const isFatal = /\b(FATAL|YAMLException)\b/i.test(line);
+    const isErrorDesc = /Error:\s/i.test(line);
+    const isCodeLine = /^\s+\d+\s*\|/.test(line) || line.includes(&apos;---^&apos;);
+    const isStackLine = /^\s+at\s/.test(line);
+    const isError = (level === &apos;ERROR&apos;) || isFatal || isErrorDesc || isCodeLine || isStackLine;
+
+    // 错误上下文管理
+    if (isError) {
+      hexoErrorContext = true;   // 进入错误上下文
+    } else if (hexoErrorContext) {
+      if (level === &apos;INFO&apos; &amp;amp;&amp;amp; !isError) {
+        hexoErrorContext = false;
+      } else if (level === &apos;DEBUG&apos;) {
+        hexoErrorContext = false;
+      } else if (level === &apos;WARN&apos;) {
+        // 保留上下文
+      }
+    }
+
+    if (silent &amp;amp;&amp;amp; !isError &amp;amp;&amp;amp; !hexoErrorContext) return;
+
+    let prefixColor;
+    if (level === &apos;INFO&apos;) prefixColor = LEVEL_COLORS.INFO;
+    else if (level === &apos;DEBUG&apos;) prefixColor = LEVEL_COLORS.DEBUG;
+    else prefixColor = LEVEL_COLORS.HEXO_ERROR;
+
+    let bodyColor = &apos;&apos;;
+    if (level === &apos;ERROR&apos; || isFatal || isErrorDesc) bodyColor = &apos;\x1b[31m&apos;;
+    else if (isCodeLine) bodyColor = &apos;\x1b[34m&apos;;
+    else if (isStackLine) bodyColor = &apos;\x1b[33m&apos;;
+
+    const prefix = ` ${prefixColor}│➤ [hexo] [${level}]${RESET}`;
+    const body = bodyColor ? `${bodyColor}${msg}${RESET}` : msg;
+    pendingLogs.push(`${prefix} ${body}`);
+
+  } else if (category === &apos;dev&apos;) {
+    process.stdout.write(&apos;\r\x1b[K&apos;);
+    let prefix, body, color = &apos;&apos;;
+    const type = levelOrType;
+
+    if (type === &apos;stepStart&apos;) {
+      color = LEVEL_COLORS.INFO;
+      prefix = ` ${color}┌➤ [dev] [INFO]${RESET}`;
+      body = `${extra.emoji || &apos;🚀&apos;} ${message}`;
+    } else if (type === &apos;stepMid&apos;) {
+      color = LEVEL_COLORS.INFO;
+      prefix = ` ${color}│➤ [dev] [INFO]${RESET}`;
+      body = `📘 ${message}`;
+    } else if (type === &apos;stepEndSuccess&apos;) {
+      color = LEVEL_COLORS.SUCCESS;
+      prefix = ` ${color}└➤ [dev] [SUCCESS]${RESET}`;
+      body = `✨ ${message}`;
+    } else if (type === &apos;stepEndFail&apos;) {
+      color = LEVEL_COLORS.ERROR;
+      prefix = ` ${color}└➤ [dev] [ERROR]${RESET}`;
+      body = `❌ ${message}`;
+    } else if (type === &apos;info&apos;) {
+      color = LEVEL_COLORS.INFO;
+      prefix = `  ➤ ${color}[dev] [INFO]${RESET}`;
+      body = `📘 ${message}`;
+    } else {
+      prefix = `[dev]`;
+      body = message;
+    }
+    console.log(`${prefix} ${body}`);
+  }
+}
+
+function logHexoLine(line) { outputLog(&apos;hexo&apos;, null, line); }
+function logStepStart(msg, emoji = &apos;🚀&apos;) { outputLog(&apos;dev&apos;, &apos;stepStart&apos;, msg, { emoji }); }
+function logStepMid(msg) { outputLog(&apos;dev&apos;, &apos;stepMid&apos;, msg); }
+function logStepEndSuccess(msg) { outputLog(&apos;dev&apos;, &apos;stepEndSuccess&apos;, msg); }
+function logStepEndFail(msg) { outputLog(&apos;dev&apos;, &apos;stepEndFail&apos;, msg); }
+function devInfo(msg) { outputLog(&apos;dev&apos;, &apos;info&apos;, msg); }
+
+function printShortcuts() {
+  devInfo(&apos;快捷键: Ctrl+C 退出 | Ctrl+R 完整重建 | Ctrl+S 启动/重启服务器&apos;);
+}
+
+// ---------- 网络与服务器 ----------
+function getLocalIP() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === &apos;IPv4&apos; &amp;amp;&amp;amp; !net.internal) return net.address;
+    }
+  }
+  return &apos;127.0.0.1&apos;;
+}
+
+function startServer() {
+  if (server || serverStarting) return;
+  serverStarting = true;
+
+  logStepStart(&apos;启动服务器&apos;);
+
+  const delay = quickMode ? 0 : 1000;
+  setTimeout(() =&amp;gt; {
+    const app = express();
+    app.use(serveStatic(PUBLIC_DIR, { index: &apos;index.html&apos;, setHeaders: res =&amp;gt; res.setHeader(&apos;Cache-Control&apos;, &apos;no-cache&apos;) }));
+    app.use((req, res) =&amp;gt; res.sendFile(path.join(PUBLIC_DIR, &apos;index.html&apos;)));
+
+    const httpServer = app.listen(PORT, () =&amp;gt; {
+      serverStarting = false;
+      server = httpServer;
+      const localIP = getLocalIP();
+      logStepMid(`本地访问: http://localhost:${PORT}`);
+      logStepMid(`局域网访问: http://${localIP}:${PORT}`);
+      if (watcher) logStepMid(&apos;文件监控已就绪&apos;);
+      logStepEndSuccess(&apos;服务器已启动&apos;);
+      printShortcuts();
+      scheduleScroll();
+    });
+
+    httpServer.on(&apos;error&apos;, err =&amp;gt; {
+      serverStarting = false;
+      logStepEndFail(`服务器错误: ${err.message}`);
+    });
+  }, delay);
+}
+
+// ---------- 文件监控 ----------
+function startWatcher() {
+  if (watcher) return;
+  watcher = chokidar.watch(WATCH_PATHS, {
+    ignoreInitial: true, persistent: true, cwd: CWD,
+    ignored: [/(^|[\/\\])\../, /\.tmp$/i, /~$/, /\.sw[op]$/i, /\.bak$/i],
+  });
+  watcher.on(&apos;add&apos;, p =&amp;gt; { scheduleBuild(`新增: ${p}`); devInfo(`新增文件: ${p}`); });
+  watcher.on(&apos;change&apos;, p =&amp;gt; { scheduleBuild(`变更: ${p}`); devInfo(`文件变化: ${p}`); });
+  watcher.on(&apos;unlink&apos;, p =&amp;gt; { scheduleBuild(`删除: ${p}`); devInfo(`文件删除: ${p}`); });
+  watcher.on(&apos;ready&apos;, () =&amp;gt; {
+    watcherReady = true;
+    // 如果服务器还未启动，则启动（直接模式下由外部调用）
+    startServer();
+  });
+}
+
+// ---------- 构建逻辑 ----------
+function abortCurrentBuild() {
+  if (currentBuildProcess) {
+    devInfo(&apos;检测到新的变更，中止当前构建...&apos;);
+    try { currentBuildProcess.kill(&apos;SIGTERM&apos;); } catch (e) {}
+    currentBuildProcess = null;
+  }
+}
+
+function build(trigger) {
+  if (buildTimer) { clearTimeout(buildTimer); buildTimer = null; }
+  if (isBuilding) abortCurrentBuild();
+
+  hexoErrorContext = false;
+  isBuilding = true;
+  lastBuildFailed = false;
+  initializing = false;
+  progressMode = &apos;bounce&apos;;
+  sliderWidth = BOUNCE_WIDTH;
+  sliderPos = 0;
+  dir = 1;
+  buildStartTime = Date.now();
+
+  logStepStart(`构建开始 (${trigger})`);
+  forceRender();
+  currentBuildProcess = runHexo([&apos;g&apos;, &apos;--incremental&apos;]);
+}
+
+function fullRebuild() {
+  if (isBuilding) abortCurrentBuild();
+
+  hexoErrorContext = false;
+  isBuilding = true;
+  lastBuildFailed = false;
+  initializing = false;
+  progressMode = &apos;bounce&apos;;
+  sliderWidth = BOUNCE_WIDTH;
+  sliderPos = 0;
+  dir = 1;
+  const totalStart = Date.now();
+  buildStartTime = totalStart;
+
+  logStepStart(&apos;完整重建 - 清理 (hexo clean)&apos;);
+  forceRender();
+
+  const clean = spawn(&apos;hexo&apos;, [&apos;clean&apos;], { cwd: CWD, stdio: [&apos;ignore&apos;,&apos;pipe&apos;,&apos;pipe&apos;] });
+  currentBuildProcess = clean;
+  let cleanOut = &apos;&apos;, cleanErr = &apos;&apos;;
+  clean.stdout.on(&apos;data&apos;, d =&amp;gt; {
+    cleanOut += d.toString();
+    const lines = cleanOut.split(&apos;\n&apos;);
+    cleanOut = lines.pop();
+    lines.forEach(logHexoLine);
+  });
+  clean.stderr.on(&apos;data&apos;, d =&amp;gt; {
+    cleanErr += d.toString();
+    const lines = cleanErr.split(&apos;\n&apos;);
+    cleanErr = lines.pop();
+    lines.forEach(logHexoLine);
+  });
+
+  clean.on(&apos;close&apos;, code =&amp;gt; {
+    if (cleanOut) logHexoLine(cleanOut);
+    if (cleanErr) logHexoLine(cleanErr);
+    if (currentBuildProcess !== clean) return;
+
+    const cleanTime = (Date.now() - totalStart) / 1000;
+    if (code !== 0) {
+      isBuilding = false;
+      lastBuildFailed = true;
+      logStepEndFail(`清理失败 (${formatTime(cleanTime)})，重建中止`);
+      currentBuildProcess = null;
+      startFillThenScroll();
+      return;
+    }
+    logStepEndSuccess(`清理完成 (${formatTime(cleanTime)})`);
+
+    logStepStart(&apos;完整重建 - 生成 (hexo g)&apos;);
+    const genStart = Date.now();
+    currentBuildProcess = runHexo([&apos;g&apos;], {
+      suppressEndLog: true,
+      onClose: (genCode) =&amp;gt; {
+        const genTime = (Date.now() - genStart) / 1000;
+        const totalTime = (Date.now() - totalStart) / 1000;
+        if (genCode === 0) {
+          logStepEndSuccess(`生成完成 (${formatTime(genTime)})`);
+          logStepEndSuccess(`完整重建完成，总耗时 ${formatTime(totalTime)}`);
+        } else {
+          logStepEndFail(`生成失败 (${formatTime(genTime)})，退出码 ${genCode}`);
+          logStepEndFail(`完整重建失败，总耗时 ${formatTime(totalTime)}`);
+        }
+      }
+    });
+  });
+
+  clean.on(&apos;error&apos;, err =&amp;gt; {
+    if (currentBuildProcess !== clean) return;
+    const cleanTime = (Date.now() - totalStart) / 1000;
+    isBuilding = false;
+    lastBuildFailed = true;
+    logStepEndFail(`清理错误: ${err.message} (${formatTime(cleanTime)})`);
+    currentBuildProcess = null;
+    startFillThenScroll();
+  });
+}
+
+function runHexo(args, opts = {}) {
+  const { suppressEndLog = false, onClose } = opts;
+  const child = spawn(&apos;hexo&apos;, args, { cwd: CWD, stdio: [&apos;ignore&apos;,&apos;pipe&apos;,&apos;pipe&apos;] });
+  let outBuf = &apos;&apos;, errBuf = &apos;&apos;;
+
+  child.stdout.on(&apos;data&apos;, d =&amp;gt; {
+    outBuf += d.toString();
+    const lines = outBuf.split(&apos;\n&apos;);
+    outBuf = lines.pop();
+    lines.forEach(logHexoLine);
+  });
+  child.stderr.on(&apos;data&apos;, d =&amp;gt; {
+    errBuf += d.toString();
+    const lines = errBuf.split(&apos;\n&apos;);
+    errBuf = lines.pop();
+    lines.forEach(logHexoLine);
+  });
+
+  child.on(&apos;close&apos;, code =&amp;gt; {
+    if (currentBuildProcess !== child) return;
+    if (outBuf) logHexoLine(outBuf);
+    if (errBuf) logHexoLine(errBuf);
+
+    const elapsed = (Date.now() - buildStartTime) / 1000;
+    isBuilding = false;
+    lastBuildFailed = (code !== 0);
+    currentBuildProcess = null;
+    hexoErrorContext = false;
+
+    if (!suppressEndLog) {
+      if (code === 0) {
+        logStepEndSuccess(`构建完成 (${formatTime(elapsed)})`);
+      } else {
+        logStepEndFail(`构建失败 (${formatTime(elapsed)})，退出码 ${code}`);
+      }
+    }
+
+    if (firstBuild &amp;amp;&amp;amp; code === 0) {
+      firstBuild = false;
+      startWatcher();
+      startServer();
+    } else if (firstBuild &amp;amp;&amp;amp; code !== 0) {
+      firstBuild = false;
+      logStepEndFail(&apos;首次构建失败，退出&apos;);
+      process.exit(1);
+    }
+
+    if (onClose) onClose(code);
+    startFillThenScroll();
+  });
+
+  child.on(&apos;error&apos;, err =&amp;gt; {
+    if (currentBuildProcess !== child) return;
+    const elapsed = (Date.now() - buildStartTime) / 1000;
+    isBuilding = false;
+    lastBuildFailed = true;
+    currentBuildProcess = null;
+    hexoErrorContext = false;
+
+    if (!suppressEndLog) {
+      logStepEndFail(`构建进程错误: ${err.message} (${formatTime(elapsed)})`);
+    }
+    if (firstBuild) {
+      firstBuild = false;
+      process.exit(1);
+    }
+    if (onClose) onClose(-1);
+    startFillThenScroll();
+  });
+
+  return child;
+}
+
+// ---------- 进度动画控制 ----------
+function startFillThenScroll() {
+  if (progressMode === &apos;fill&apos;) return;
+  sliderWidth = BAR_LENGTH;
+  sliderPos = 0;
+  progressMode = &apos;fill&apos;;
+  if (FILL_STAY &amp;gt; 0) {
+    setTimeout(() =&amp;gt; {
+      if (server &amp;amp;&amp;amp; !isBuilding) {
+        sliderWidth = BOUNCE_WIDTH;
+        sliderPos = -sliderWidth;
+        progressMode = &apos;scroll&apos;;
+      }
+    }, FILL_STAY);
+  } else {
+    if (server &amp;amp;&amp;amp; !isBuilding) {
+      sliderWidth = BOUNCE_WIDTH;
+      sliderPos = -sliderWidth;
+      progressMode = &apos;scroll&apos;;
+    }
+  }
+}
+
+function scheduleScroll() {
+  if (!isBuilding &amp;amp;&amp;amp; server &amp;amp;&amp;amp; !serverStarting &amp;amp;&amp;amp; progressMode !== &apos;scroll&apos;) {
+    sliderWidth = BOUNCE_WIDTH;
+    sliderPos = -sliderWidth;
+    progressMode = &apos;scroll&apos;;
+  }
+}
+
+function scheduleBuild(trigger) {
+  if (buildTimer) clearTimeout(buildTimer);
+  buildTimer = setTimeout(() =&amp;gt; { buildTimer = null; build(trigger); }, DEBOUNCE_DELAY);
+}
+
+function forceRender() {
+  if (renderTimeout) { clearTimeout(renderTimeout); renderTimeout = null; }
+  renderLine();
+  scheduleRender();
+}
+
+function scheduleRender() {
+  if (renderTimeout) clearTimeout(renderTimeout);
+  const active = initializing || isBuilding || serverStarting || progressMode === &apos;fill&apos;;
+  const interval = active ? FRAME_ACTIVE : FRAME_IDLE;
+  renderTimeout = setTimeout(() =&amp;gt; {
+    spinnerIdx++;
+    renderLine();
+    scheduleRender();
+  }, interval);
+}
+
+// ---------- 状态栏渲染 ----------
+function renderLine() {
+  flushLogs();
+  updateProgress();
+
+  let bgStyle;
+  if (initializing) {
+    bgStyle = BG_INIT;
+  } else if (isBuilding) {
+    bgStyle = BG_BUILD;
+  } else if (lastBuildFailed) {
+    bgStyle = BG_FAIL;
+  } else if (serverStarting || server) {
+    bgStyle = BG_RUN;
+  } else {
+    bgStyle = RESET;
+  }
+
+  const spinner = isBuilding ? SPINNER_FRAMES[spinnerIdx % SPINNER_FRAMES.length] : &apos; &apos;;
+  const mark = (server &amp;amp;&amp;amp; !serverStarting) ? &apos;&apos; : &apos;[x]&apos;;
+  let statusText;
+
+  if (initializing) {
+    statusText = `初始化中 ${mark}端口:${PORT}`;
+  } else if (serverStarting) {
+    statusText = `启动服务器中 ${mark}端口:${PORT}`;
+  } else if (isBuilding) {
+    const elapsed = buildStartTime ? (Date.now() - buildStartTime) / 1000 : 0;
+    statusText = `构建中 ${formatTime(elapsed)} ${mark}端口:${PORT}`;
+  } else if (lastBuildFailed) {
+    statusText = `构建失败 ${mark}端口:${PORT}`;
+  } else if (server) {
+    statusText = `运行中 端口:${PORT}`;
+  } else {
+    statusText = `就绪 ${mark}端口:${PORT}`;
+  }
+
+  process.stdout.write(`\r\x1b[K${bgStyle} ${spinner} [${getProgressBar()}] ${statusText} ${RESET}`);
+}
+
+function updateProgress() {
+  if (progressMode === &apos;bounce&apos;) {
+    sliderPos += dir;
+    if (sliderPos + sliderWidth &amp;gt;= BAR_LENGTH) { sliderPos = BAR_LENGTH - sliderWidth; dir = -1; }
+    else if (sliderPos &amp;lt;= 0) { sliderPos = 0; dir = 1; }
+  } else if (progressMode === &apos;scroll&apos;) {
+    sliderPos += 1;
+    if (sliderPos &amp;gt; BAR_LENGTH) sliderPos = -sliderWidth;
+  }
+}
+
+// ---------- 欢迎语 ----------
+function printWelcome() {
+  flushLogs();
+  console.log(`\x1b[36m✨ 欢迎使用LJXH的Hexo构建脚本 (∠・ω&amp;lt; )⌒☆！\x1b[0m`);
+  console.log(`\x1b[90m⚡ Node.js:\x1b[0m ${process.version}`);
+
+  let pm = &apos;npm&apos;, pmIcon = &apos;📦&apos;;
+  try {
+    if (fs.existsSync(path.join(CWD, &apos;yarn.lock&apos;))) { pm = &apos;yarn&apos;; pmIcon = &apos;🧶&apos;; }
+    else if (fs.existsSync(path.join(CWD, &apos;pnpm-lock.yaml&apos;))) { pm = &apos;pnpm&apos;; pmIcon = &apos;📦&apos;; }
+    else {
+      const pkg = JSON.parse(fs.readFileSync(path.join(CWD, &apos;package.json&apos;), &apos;utf8&apos;));
+      if (pkg.packageManager &amp;amp;&amp;amp; pkg.packageManager.includes(&apos;yarn&apos;)) { pm = &apos;yarn&apos;; pmIcon = &apos;🧶&apos;; }
+    }
+    const pmVersion = execSync(`${pm} --version`, { encoding: &apos;utf8&apos; }).trim();
+    console.log(`${pmIcon} ${pm}: ${pmVersion}`);
+  } catch {}
+
+  try {
+    const hexoVersion = require(path.join(CWD, &apos;node_modules/hexo/package.json&apos;)).version;
+    console.log(`🌐 Hexo: ${hexoVersion}`);
+  } catch {}
+
+  try {
+    const config = fs.readFileSync(path.join(CWD, &apos;_config.yml&apos;), &apos;utf8&apos;);
+    const theme = config.match(/^theme:\s*(\S+)/m)?.[1];
+    if (theme) console.log(`🎨 主题: ${theme}`);
+  } catch {}
+  console.log(&apos;&apos;);
+  printShortcuts();
+}
+
+// ---------- Ctrl+S 重启服务器 ----------
+function restartServer() {
+  if (server) {
+    devInfo(&apos;正在重启服务器...&apos;);
+    server.close(() =&amp;gt; {
+      server = null;
+      startServer();
+    });
+  } else {
+    devInfo(&apos;正在启动服务器...&apos;);
+    startServer();
+  }
+}
+
+// ---------- 退出 ----------
+function gracefulExit() {
+  process.stdout.write(`\r\x1b[K${RESET}\n`);
+  console.log(&apos;👋 感谢使用，下次见 (´• ω •`)ﾉ ♪&apos;);
+  if (renderTimeout) clearTimeout(renderTimeout);
+  if (server) server.close();
+  if (watcher) watcher.close();
+  if (process.stdin.isTTY) { process.stdin.setRawMode(false); process.stdin.pause(); }
+  process.exit(0);
+}
+
+// ---------- 初始化 ----------
+function init() {
+  initializing = true;
+  hexoErrorContext = false;
+  scheduleRender();
+
+  printWelcome();
+
+  // 确保 public 目录存在（如果是直接启动而目录不存在，给出警告但不阻止启动）
+  if (!fs.existsSync(PUBLIC_DIR)) {
+    if (directServe) {
+      devInfo(&apos;public 目录不存在，服务器可能返回 404，建议先执行 hexo generate&apos;);
+    } else {
+      fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+    }
+  }
+
+  const delay = quickMode ? 0 : 1000;
+  setTimeout(() =&amp;gt; {
+    if (directServe) {
+      // 直接启动模式：跳过首次构建，直接启动服务器和文件监控
+      initializing = false;
+      logStepStart(&apos;直接启动模式 (跳过构建)&apos;, &apos;⚡&apos;);
+      startWatcher();   // 启动监控（会内部调用 startServer）
+      startServer();    // 确保服务器启动
+      // 强制渲染一帧，让状态栏更新
+      forceRender();
+    } else {
+      // 正常首次构建
+      logStepStart(&apos;首次构建&apos;);
+      firstBuild = true;
+      isBuilding = true;
+      lastBuildFailed = false;
+      initializing = false;
+      progressMode = &apos;bounce&apos;;
+      sliderWidth = BOUNCE_WIDTH;
+      sliderPos = 0;
+      dir = 1;
+      buildStartTime = Date.now();
+      forceRender();
+      currentBuildProcess = runHexo([&apos;g&apos;, &apos;--incremental&apos;]);
+    }
+  }, delay);
+
+  if (process.stdin.isTTY) {
+    process.stdin.setRawMode(true);
+    process.stdin.resume();
+    process.stdin.on(&apos;data&apos;, chunk =&amp;gt; {
+      if (chunk.length === 1) {
+        if (chunk[0] === 3) gracefulExit();          // Ctrl+C
+        else if (chunk[0] === 18) fullRebuild();     // Ctrl+R
+        else if (chunk[0] === 19) restartServer();   // Ctrl+S
+      }
+    });
+  }
+  process.on(&apos;SIGINT&apos;, gracefulExit);
+}
+
+init();
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在博客根目录保存为 &lt;code&gt;dev.js&lt;/code&gt;（或者其他的名字也可以）&lt;/p&gt;
+&lt;p&gt;先安装依赖：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install chokidar express serve-static --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add chokidar express serve-static
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add chokidar express serve-static
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;注意 Hexo 要全局安装。&lt;/p&gt;
+&lt;p&gt;然后直接运行命令：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;node dev.js [端口] [选项]
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;选项有这几个：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;选项&lt;/th&gt;
+&lt;th&gt;简写&lt;/th&gt;
+&lt;th&gt;含义&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--silent&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-s&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;静默模式，只输出脚本日志和 Hexo 的错误日志&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--quick&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-q&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;快速模式，跳过手动添加的延迟&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--direct&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-d&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;直接启动服务器，跳过首次构建（请确保静态文件已生成）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--help&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;-h&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;输出帮助&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;可以使用以下快捷键：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Ctrl&lt;/code&gt; + &lt;code&gt;C&lt;/code&gt;：退出脚本&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Ctrl&lt;/code&gt; + &lt;code&gt;R&lt;/code&gt;：完整重构（hexo cl + hexo g）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Ctrl&lt;/code&gt; + &lt;code&gt;S&lt;/code&gt;：重启本地服务器&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;脚本使用 chokidar 库，支持监测文件变动自动重新构建。以后改文章不用重新输入命令了！&lt;/p&gt;
+&lt;p&gt;另外，脚本自动构建使用的是 &lt;code&gt;hexo g --incremental&lt;/code&gt;，对于文章变动比较高效。如果你改动了配置文件或主题文件，建议执行一次完整重建。&lt;/p&gt;
+&lt;p&gt;太方便了！当然，你也可以自己 Vibe Coding 一个，实现自己想要的功能！&lt;/p&gt;
+&lt;h2&gt;说在最后&lt;/h2&gt;
+&lt;p&gt;本地预览的问题可算是解决了，这下可以安心写文章了。&lt;/p&gt;
+&lt;p&gt;以后打算再写一下关于 Hexo Solitude 的懒加载问题。随缘更新。&lt;/p&gt;
+&lt;p&gt;✨&lt;/p&gt;
+</content:encoded></item><item><title>Hexo 图片引用相关问题</title><link>https://msqy-h.github.io/posts/hexo-image/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/hexo-image/</guid><description>Hexo 文章图片引用问题的描述与多个解决方案</description><pubDate>Mon, 06 Jul 2026 20:38:46 GMT</pubDate><content:encoded>&lt;h2&gt;写在前面&lt;/h2&gt;
+&lt;p&gt;这几天在搞 Hexo 的 Solitude 主题，最后写文章时遇见了个问题：就是&lt;strong&gt;图片的引用&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;Hexo很神奇，如果有主题，通过 &lt;code&gt;/img/1.webp&lt;/code&gt; 来引用图片，引用的不是根目录下的 source 文件夹中的 img 文件夹，而是主题目录下的 source 文件夹中的 img 文件夹。更直观的说：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;❌ &lt;code&gt;博客根目录/source/img/1.webp&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;✔️ &lt;code&gt;博客根目录/themes/solitude/source/img/1.webp&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;直接把图片放在主题的 source 文件夹也不是不行，就是感觉有点怪怪的，更新主题时也有被覆盖的风险。还是放在根目录的 source 文件夹好一点。&lt;/p&gt;
+&lt;p&gt;在必应查了下，发现 Hexo 配置文件中有这么一项：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;post_asset_folder: false
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;调成 &lt;code&gt;true&lt;/code&gt; ，Hexo CLI 会在 &lt;code&gt;hexo new post 文章标题&lt;/code&gt; 时在根目录的 &lt;code&gt;resource/_posts&lt;/code&gt; 下生成一个与文章标题名称一样的文件夹，用作每个文章的资源文件夹。&lt;/p&gt;
+&lt;p&gt;这下好多了，至少管理文章资源时舒服很多。&lt;/p&gt;
+&lt;p&gt;但是，&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;当你打开文章资源文件夹功能后，你把一个 example.jpg 图片放在了你的资源文件夹中，如果通过使用相对路径的常规 markdown 语法 &lt;code&gt;![](example.jpg)&lt;/code&gt; ，它将&lt;strong&gt;不会&lt;/strong&gt;出现在首页上。&amp;lt;br&amp;gt;——&lt;a href=&quot;https://hexo.io/zh-cn/docs/asset-folders&quot;&gt;Hexo官方文档&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;这就麻烦了。不过，我找到了几个解决方法。&lt;/p&gt;
+&lt;h2&gt;文章详情页引用&lt;/h2&gt;
+&lt;h3&gt;1.使用图床&lt;/h3&gt;
+&lt;p&gt;这可能是大多数人选择的方式。把图片上传到图床，直接用 &lt;code&gt;[](图片链接)&lt;/code&gt; 引用。很方便，但是图床可能会跑路，比较不稳定，还是放在自己服务器上好。:spoiler[反正cloudflare带宽无限]&lt;/p&gt;
+&lt;h3&gt;2. 相对路径引用的标签插件&lt;/h3&gt;
+&lt;p&gt;Hexo 3 的更新带来了许多标签插件，可以用&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;{% asset_img example.jpg This is an example image %}
+{% asset_img &quot;spaced asset.jpg&quot; &quot;spaced title&quot; %}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;来引用资源文件夹的图片。&lt;/p&gt;
+&lt;p&gt;确实是种方法，但只能在 Hexo 中使用。&lt;/p&gt;
+&lt;h3&gt;3.使用 Markdown 嵌入图片&lt;/h3&gt;
+&lt;p&gt;我选择这种方式。&lt;/p&gt;
+&lt;p&gt;先安装 &lt;code&gt;hexo-renderer-marked&lt;/code&gt; 插件：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install hexo-renderer-marked --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add hexo-renderer-marked
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add hexo-renderer-marked
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在 &lt;code&gt;_config.yml&lt;/code&gt; 中写入：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;post_asset_folder: true
+marked:
+  prependRoot: true
+  postAsset: true
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;这样你就可以直接通过 &lt;code&gt;![](example.jpg)&lt;/code&gt; 直接引用文章资源文件夹的图片了（&lt;code&gt;博客根目录/source/_post/文章文件名/example.jpg&lt;/code&gt;）。&lt;/p&gt;
+&lt;p&gt;假设 Hexo 三连后 &lt;code&gt;image.jpg&lt;/code&gt; 的位置为 &lt;code&gt;/2026/07/05/foo/image.jpg&lt;/code&gt; ，这表示它是 &lt;code&gt;/2026/07/05/foo/&lt;/code&gt; 文章的一张资源图片，&lt;code&gt;![](image.jpg)&lt;/code&gt; 将会被解析为 &lt;code&gt;&amp;lt;img src=&quot;/2020/01/02/foo/image.jpg&quot;&amp;gt;&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;舒服！但是，这有一个问题。&lt;/p&gt;
+&lt;h2&gt;文章封面图与其他页面的引用&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;hexo-renderer-marked&lt;/code&gt; 插件是不会将 &lt;code&gt;frontmatter&lt;/code&gt; 的 &lt;code&gt;cover&lt;/code&gt; 或类似字段解析的，这意味着，如果你在 &lt;code&gt;frontmatter&lt;/code&gt; 写 &lt;code&gt;cover: image.jpg&lt;/code&gt;，那它就指的是 &lt;code&gt;博客根目录/themes/solitude/source/image.jpg&lt;/code&gt;。但是我们想要它指向文章的资源文件夹内的图片，这就难搞了。&lt;/p&gt;
+&lt;h3&gt;1. 使用图床&lt;/h3&gt;
+&lt;p&gt;和上面一样，不多说了。直接写图片链接。&lt;/p&gt;
+&lt;h3&gt;2. 根据permalink计算实际路径&lt;/h3&gt;
+&lt;p&gt;Permalink 是啥？&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://hexo.io/zh-cn/docs/permalinks&quot; title=&quot;永久链接（Permalinks）| Hexo&quot; description=&quot;介绍了如何在 Hexo 中配置和自定义永久链接。&quot;}&lt;/p&gt;
+&lt;p&gt;默认配置是 &lt;code&gt;permalink: :year/:month/:day/:title/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;假设你的 &lt;code&gt;foo&lt;/code&gt; 文章的图片 &lt;code&gt;image.jpg&lt;/code&gt; 在三连后的位置是 /2026/07/05/foo/image.jpg ，那么在 &lt;code&gt;cover&lt;/code&gt; 字段你应该写的路径是 &lt;code&gt;/2026/07/05/foo/image.jpg&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;每次都这么算，太麻烦了，怎么办？&lt;/p&gt;
+&lt;h3&gt;3. 使用脚本&lt;/h3&gt;
+&lt;p&gt;不知道是我的问题还是必应的问题，我一直都没有搜到很合适的方法。&lt;/p&gt;
+&lt;p&gt;Vibe Coding 启动！:spoiler[&apos;梁圣真是大善人&apos;]&lt;/p&gt;
+&lt;p&gt;通过我与 Deepseek 10 分钟的交流，也是成功写了个脚本，放在 &lt;code&gt;博客根目录/scripts/cover-path.js&lt;/code&gt;。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+以下代码由 DeepSeek 编写&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre&gt;&lt;code&gt;hexo.extend.filter.register(&apos;before_post_render&apos;, function(data) {
+  if (data.cover &amp;amp;&amp;amp; !data.cover.startsWith(&apos;http&apos;) &amp;amp;&amp;amp; !data.cover.startsWith(&apos;/&apos;)) {
+    // data.path 例如 &quot;2026/07/05/foo/index.html&quot;
+    let dir = data.path.replace(/\/index\.html$/, &apos;&apos;).replace(/\.html$/, &apos;&apos;);
+    if (!dir.endsWith(&apos;/&apos;)) dir += &apos;/&apos;;
+    data.cover = &apos;/&apos; + dir + data.cover;
+    console.log(`[转换] ${data.title} -&amp;gt; ${data.cover}`);
+  }
+  return data;
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;第一行的&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;hexo.extend.filter.register(&apos;before_post_render&apos;, function(data) {
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;表示向 Hexo 注册一个过滤器，在文章渲染前执行。在文章渲染前，这个脚本会读取 &lt;code&gt;cover&lt;/code&gt; 字段和文章路径，如果 &lt;code&gt;cover&lt;/code&gt; 字段不是 &lt;code&gt;http&lt;/code&gt; 或 &lt;code&gt;/&lt;/code&gt; 开头，就将你本来写的 &lt;code&gt;image.jpg&lt;/code&gt; 转换为 &lt;code&gt;/2026/07/05/foo/image.jpg&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;不用自己算了，太方便了。以后直接写封面文件名就行了。&lt;/p&gt;
+&lt;h2&gt;写在最后&lt;/h2&gt;
+&lt;p&gt;Hexo 的图片引用问题总算搞定了，现在引用文章图片更方便了。&lt;/p&gt;
+&lt;p&gt;不过 vibe coding 可能会有 bug，对于一些情况处理不太好，建议还是自己检查一下比较好。&lt;/p&gt;
+&lt;p&gt;如果遇到脚本处理不了的问题，欢迎发邮件给我&lt;a href=&quot;mailto:LJXH_H@outlook.com&quot;&gt;点击发送&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;后续我打算写几个 Hexo 相关问题的记录，再说说我的博客的方案。随缘更新。&lt;/p&gt;
+</content:encoded></item><item><title>2FA 与 TOTP：更好地保护你的账号</title><link>https://msqy-h.github.io/posts/2fa/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/2fa/</guid><description>2FA 简明开启教程</description><pubDate>Sun, 05 Jul 2026 18:22:00 GMT</pubDate><content:encoded>&lt;h2&gt;✍️写在前面&lt;/h2&gt;
+&lt;p&gt;最近闲来无事，在翻 GitHub 的账号设置。翻到 &lt;code&gt;Password and authentication（密码和身份验证）&lt;/code&gt; 时，看到了个 &lt;code&gt;Two-factor authentication（双重认证）&lt;/code&gt; ，也就是 2FA。一查才知道，这个东西对账号安全非常重要。也就是说，开启 2FA，基本没人盗得了你的号 :spoiler[包括你自己，但是不用担心，只要保存好恢复码，你还是能找回账号]&lt;/p&gt;
+&lt;p&gt;下面进入正题&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+注意：本人非专业人士，本文内容全是个人理解，如有错误，欢迎指正&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;🤔介绍 2FA&lt;/h2&gt;
+&lt;h3&gt;什么是 2FA&lt;/h3&gt;
+&lt;blockquote&gt;
+&lt;p&gt;双因子认证（2FA）是一种结合两种不同验证因素的身份认证方法，通常包括用户已知的密码（如账号密码）和用户持有的实物（如手机、令牌或生物特征）两类要素。其目的是通过双重验证提升账户安全性，主要应用于企业远程访问、金融及电子商务等领域。——&lt;a href=&quot;https://baike.baidu.com/item/%E5%8F%8C%E5%9B%A0%E5%AD%90%E8%AE%A4%E8%AF%81%E6%9C%BA%E5%88%B6/9748125&quot;&gt;百度百科&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;通俗地讲，其实就是你登录时要用两个东西：一个是&lt;strong&gt;你的密码&lt;/strong&gt;，一个是&lt;strong&gt;你手里有的东西&lt;/strong&gt;，例如&lt;code&gt;手机&lt;/code&gt;、&lt;code&gt;令牌&lt;/code&gt;等东西&lt;/p&gt;
+&lt;h3&gt;常用的认证方式&lt;/h3&gt;
+&lt;p&gt;常用的认证方式有这几种：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;SMS OTP（短信验证码）&lt;/strong&gt;：没错，就是你经常输入的短信验证码&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TOTP（基于时间的一次性密码）&lt;/strong&gt;：听起来很高大上，其实就是网站和你约定好一个暗号，各自用相同算法，结合当前时间，算出一个验证码，比对算出的结果，结果一样就放行&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FIDO2（硬件安全密钥）&lt;/strong&gt;：使用实体设备通过一定方式连接网站进行认证&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;推送确认&lt;/strong&gt;：网站推送一个认证请求到手机APP上，在手机APP上确认&lt;/li&gt;
+&lt;li&gt;等等&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里主要介绍 &lt;strong&gt;TOTP&lt;/strong&gt;，也&lt;strong&gt;推荐使用这个&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;为什么？&lt;/p&gt;
+&lt;p&gt;好问题。&lt;/p&gt;
+&lt;p&gt;下面是简单的对比。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;TOTP&lt;/strong&gt;：&lt;strong&gt;安全性较高&lt;/strong&gt;，不依赖网站方的短信发送速度，&lt;strong&gt;速度快且比较方便&lt;/strong&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;短信&lt;/strong&gt;：虽然&lt;strong&gt;方便&lt;/strong&gt;，但是手机信号差时，根本收不到 :spoiler[虽然一般情况下能收到，但是到地下室或电梯就麻烦了]。这还是其次，主要是网站方&lt;strong&gt;发送的短信不一定及时到&lt;/strong&gt; :spoiler[特别点名某度，经常是五分钟过去了，点了重发，上一个失效的验证码才到 &lt;s&gt;德铁行为（&lt;/s&gt;&apos;]，且安全性低。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;FIDO2&lt;/strong&gt;：&lt;strong&gt;最安全&lt;/strong&gt;，但是&lt;strong&gt;又麻烦又贵&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;推送确认&lt;/strong&gt;：这样还需要在手机&lt;strong&gt;多安装APP&lt;/strong&gt;，浪费空间 :spoiler[但是GitHub的挺好用的]&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;当然，如果你没有什么特别重要的东西，用短信就够了。但是，如果你想学习也可以，以备不时之需（假如某网站突然强制要求使用了呢）&lt;/p&gt;
+&lt;p&gt;下面是 TOTP 的使用教程&lt;/p&gt;
+&lt;h2&gt;🔐2FA 的开启与 TOTP 的使用&lt;/h2&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!NOTE]
+你需要准备：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;脑子&lt;/li&gt;
+&lt;li&gt;手&lt;/li&gt;
+&lt;li&gt;手机或电脑&lt;/li&gt;
+&lt;li&gt;网络&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;下面以 &lt;strong&gt;GitHub&lt;/strong&gt; 的开启为例&lt;/p&gt;
+&lt;h3&gt;1. 选择你的 TOTP 应用&lt;/h3&gt;
+&lt;p&gt;这里建议使用&lt;strong&gt;开源&lt;/strong&gt;的，这是因为开源的代码完全透明，一看就知道有没有后门。就算你看不懂代码，也会有大佬帮你看。&lt;/p&gt;
+&lt;p&gt;当然，不想那么麻烦，用 &lt;strong&gt;Google Authenticator&lt;/strong&gt; 或 &lt;strong&gt;Microsoft Authenticator&lt;/strong&gt; 也行。大厂产品，有保障。&lt;/p&gt;
+&lt;p&gt;我推荐 &lt;strong&gt;2FAS&lt;/strong&gt;，这个APP完全开源，界面也不错，支持导入导出，苹果安卓都有。&lt;a href=&quot;https://2fas.com/&quot;&gt;官网传送门&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;::github{repo=&apos;twofas/2fas-pass-android&apos;}&lt;/p&gt;
+&lt;p&gt;::github{repo=&apos;twofas/2fas-pass-ios&apos;}&lt;/p&gt;
+&lt;p&gt;进到对应仓库下载即可。iOS 在 AppStore 下载。&lt;/p&gt;
+&lt;h3&gt;2. 开启 GitHub 的 2FA 验证&lt;/h3&gt;
+&lt;p&gt;看到这，我默认你有 GitHub 帐号了。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;打开 &lt;a href=&quot;https://github.com/settings/security&quot;&gt;GitHub 安全设置&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;选择 &lt;code&gt;Password and authentication&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;滑到最底部，你会看见这么个东西：
+&lt;img src=&quot;/images/2fa/2fa-1.webp&quot; alt=&quot;2fa-1.webp&quot; title=&quot;双重验证选项&quot; /&gt;
+点击&lt;code&gt;Enable two-factor authentication&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;GitHub 会让你认证账号，按指示操作即可&lt;/li&gt;
+&lt;li&gt;设置 2FA 密钥。点击 2FAS 右下角的加号，扫描二维码，复制生成的验证码，输入到 GitHub 中。
+&lt;img src=&quot;/images/2fa/2fa-2.webp&quot; alt=&quot;2fa-2.webp&quot; title=&quot;双重验证密钥获取&quot; /&gt;&lt;/li&gt;
+&lt;li&gt;保存恢复代码。**务必妥善保管！丢了将无法找回！**建议抄纸上放抽屉，或者多复制几份到不联网设备上。&lt;/li&gt;
+&lt;li&gt;完成！&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;以后登录 GitHub 时，只需输入密码，再简单地输入 TOTP 码即可。&lt;strong&gt;现在你的账号很安全&lt;/strong&gt;了！&lt;/p&gt;
+&lt;p&gt;同理，其他的网站也可以这么操作（比如 &lt;code&gt;Microsoft&lt;/code&gt; ）。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!WARNING]
+&lt;strong&gt;务必保存好恢复代码，但是不要泄露给其他人&lt;/strong&gt;，否则一旦丢失，你的账号永远回不来了！:spoiler[也不至于彻底找不回来，但是非常麻烦]&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;💬再说几句&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;并不是开启了 2FA，就可以高枕无忧了。&lt;strong&gt;毕竟 2FA 的 TOTP 不是没有风险的，比如有人监控了你的手机，那他就可以直接获取你的密钥。所以，还是要&lt;/strong&gt;注意上网安全，不乱下软件，不泄露真实信息，这才是根本。&lt;/strong&gt;&lt;/p&gt;
+&lt;h2&gt;🏁结尾&lt;/h2&gt;
+&lt;p&gt;本文主要介绍了 2FA，相信看到这里你一定有收获。总之，&lt;strong&gt;没有身份验证方法是绝对安全的&lt;/strong&gt;。不过也不用怕，如果你只是普通用户，而且账号没什么重要的东西，那么用短信就够了，比纯密码好。如果你想保护你的账号，那就给你的账号加上 2FA 吧。&lt;/p&gt;
+&lt;h2&gt;📅更新计划&lt;/h2&gt;
+&lt;p&gt;打算下一篇写一下 Hexo 博客的部署教程。随缘更新，可能会写写其他的。生活愉快。&lt;/p&gt;
+</content:encoded></item></channel></rss>

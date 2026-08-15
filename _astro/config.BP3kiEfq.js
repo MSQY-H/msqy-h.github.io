@@ -1,0 +1,1 @@
+var s=(o=>(o[o.Home=0]="Home",o[o.Archive=1]="Archive",o[o.Friends=2]="Friends",o[o.About=3]="About",o[o.Message=4]="Message",o))(s||{});const a={lang:"zh_CN"};s.Home,s.Archive,s.Friends,s.About,s.Message;const e={theme:"github-dark"};export{e,a as s};
