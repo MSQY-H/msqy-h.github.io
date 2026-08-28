@@ -1,4 +1,100 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>MSQY&apos;s Blog</title><description>所见所闻，所思所想</description><link>https://msqy-h.github.io/</link><language>zh_CN</language><item><title>用了两个月的 Hexo，还是换回 Astro：简述我的个人博客历程</title><link>https://msqy-h.github.io/posts/blog-history/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/blog-history/</guid><description>介绍了我的个人博客历程：从单 HTML 到 Astro 再到 Hexo，最后回到 Astro</description><pubDate>Wed, 26 Aug 2026 16:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;前言&lt;/h2&gt;
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/"><channel><title>MSQY&apos;s Blog</title><description>所见所闻，所思所想</description><link>https://msqy-h.github.io/</link><language>zh_CN</language><item><title>Astro 博客配置 IndexNow</title><link>https://msqy-h.github.io/posts/astro-indexnow/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/astro-indexnow/</guid><description>介绍了如何使用 astro-indexnow 插件为 Astro 博客设置自动向 Bing IndexNow 提交 url</description><pubDate>Fri, 28 Aug 2026 18:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;前言&lt;/h2&gt;
+&lt;p&gt;Bing 有个功能，叫 IndexNow，我们可以使用这个功能让 Bing 更快知道我们的网站更新，并更新索引。那么，如何在 Astro 博客配置 IndexNow？&lt;/p&gt;
+&lt;p&gt;本文参考&lt;/p&gt;
+&lt;p&gt;::link-card{url=&quot;https://www.arcwolf.top/posts/indexnow/&quot; title=&quot;为Astro添加IndexNow - Arcwolf Blog&quot; description=&quot;为 Astro 添加 IndexNow，提高搜索引擎收录速度&quot;}&lt;/p&gt;
+&lt;p&gt;编写。原作者为 &lt;a href=&quot;https://www.arcwolf.top/&quot;&gt;Arcwolf&lt;/a&gt;，原文章采用 &lt;a href=&quot;https://creativecommons.org/licenses/by-nc-sa/4.0/&quot;&gt;CC BY-NC-SA 4.0&lt;/a&gt; 协议。&lt;/p&gt;
+&lt;h2&gt;配置方法&lt;/h2&gt;
+&lt;h3&gt;1. 安装插件&lt;/h3&gt;
+&lt;p&gt;非常简单，没什么好说的。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;npm install astro-indexnow --save
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;pnpm add astro-indexnow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;pre&gt;&lt;code&gt;yarn add astro-indexnow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;2. 获取 IndexNow API 密钥&lt;/h3&gt;
+&lt;p&gt;打开 &lt;a href=&quot;https://www.bing.com/indexnow&quot;&gt;Bing IndexNow 页面&lt;/a&gt;，滑到底部，点击 &lt;code&gt;Get Started&lt;/code&gt;，继续滑到底部，找到 &lt;code&gt;Generate API Key&lt;/code&gt;，下面的一串很长的字符就是 API 密钥。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/astro-indexnow/get-api.webp&quot; alt=&quot;获取 API 密钥&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;记住他，复制下来。&lt;/p&gt;
+&lt;h3&gt;3. 托管 API 密钥&lt;/h3&gt;
+&lt;p&gt;在项目的 &lt;code&gt;public&lt;/code&gt; 目录下新建一个与你的密钥同名的 txt 文件，并写入你的密钥到文件中。如：&lt;/p&gt;
+&lt;p&gt;假设你的密钥为 &lt;code&gt;123456&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;那么文件则为：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;123456
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果项目需要上传至 GitHub 且使用 GitHub Pages 部署，可先暂时跳过此步骤，参考第 5 步，以实现不泄漏密钥。&lt;/p&gt;
+&lt;h3&gt;4. 设置插件&lt;/h3&gt;
+&lt;p&gt;在 &lt;code&gt;astro.config.mjs&lt;/code&gt; 添加下列代码：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;import { defineConfig } from &quot;astro/config&quot;;
+import indexnow from &quot;astro-indexnow&quot;;
+
+export default defineConfig({
+  site: &quot;https://example.com&quot;,
+  integrations: [
+    indexnow({
+      key: process.env.INDEXNOW_KEY,
+    }),
+  ],
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果想要根据是否存在环境变量判断是否启用插件，可以像我一样使用条件展开。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;import { defineConfig } from &quot;astro/config&quot;;
+import indexnow from &quot;astro-indexnow&quot;;
+
+export default defineConfig({
+  site: &quot;https://example.com&quot;,
+  integrations: [
+    ...(process.env.INDEXNOW_KEY ? [indexnow({ key: process.env.INDEXNOW_KEY })] : []),
+  ],
+});
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;该方法不一定稳定，但能用。&lt;/p&gt;
+&lt;p&gt;配置完成后，配置 &lt;code&gt;.env&lt;/code&gt; 环境变量以进行本地调试。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
+INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;如果不想公开密钥，那么千万不要把这个 .env 文件上传。&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;[!TIP]
+如果你使用的是Git部署，记得提交 &lt;code&gt;.astro-indexnow-cache.json&lt;/code&gt; 文件。&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;5. 配置环境变量&lt;/h3&gt;
+&lt;h4&gt;一般云平台&lt;/h4&gt;
+&lt;p&gt;直接在云平台的环境变量配置页面添加下面的变量即可。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
+INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;GitHub Pages&lt;/h4&gt;
+&lt;p&gt;对于使用 GitHub Actions 部署的 GitHub Pages，需要在 Actions 的配置文件添加一些内容。&lt;/p&gt;
+&lt;p&gt;假设你的配置文件名为 &lt;code&gt;deploy.yml&lt;/code&gt;，那么你需要在 &lt;code&gt;deploy.yml&lt;/code&gt; 添加以下内容：&lt;/p&gt;
+&lt;p&gt;在 &lt;code&gt;pnpm build&lt;/code&gt; 操作前添加：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- name: Create IndexNow key file
+        run: echo &quot;${{ secrets.INDEXNOW_KEY }}&quot; &amp;gt; public/${{ secrets.INDEXNOW_KEY }}.txt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;以生成第 3 步中的文件。&lt;/p&gt;
+&lt;p&gt;同时，你需要在 &lt;code&gt;pnpm build&lt;/code&gt; 操作添加：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;- name: Build site
+        env:
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+          INDEXNOW_ENDPOINT: ${{ secrets.INDEXNOW_ENDPOINT }}
+        run: pnpm build
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;并打开 GitHub 项目，选择 &lt;code&gt;Settings&lt;/code&gt; &amp;gt; &lt;code&gt;Secrets and variables&lt;/code&gt; &amp;gt; &lt;code&gt;Actions&lt;/code&gt; &amp;gt; &lt;code&gt;Secrets&lt;/code&gt;，添加上面的变量：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
+INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;最后执行部署操作。&lt;/p&gt;
+&lt;h3&gt;检查&lt;/h3&gt;
+&lt;p&gt;不出意外的话，你应该能在构建日志中看到类似这些：&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;07:55:43 [astro-indexnow] submitting 15 URL(s) in 1 batch(es) [mode=changed, batchSize=10000]
+07:55:43 [astro-indexnow] summary: scanned=15, changed=15, batched=1, submitted=15
+07:55:43 [astro-indexnow] IndexNow submission complete
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;接着再前往 Bing Webmaster Tools 检查有没有刚刚提交的 url。&lt;/p&gt;
+&lt;p&gt;恭喜你，成功了！&lt;/p&gt;
+&lt;h2&gt;结尾&lt;/h2&gt;
+&lt;p&gt;在这篇文章，我们成功使用 astro-indexnow 插件为 Astro 博客设置自动向 Bing IndexNow 提交 url。以后每次构建，插件会自动提交 url，不用手动提交了！&lt;/p&gt;
+</content:encoded></item><item><title>用了两个月的 Hexo，还是换回 Astro：简述我的个人博客历程</title><link>https://msqy-h.github.io/posts/blog-history/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/blog-history/</guid><description>介绍了我的个人博客历程：从单 HTML 到 Astro 再到 Hexo，最后回到 Astro</description><pubDate>Wed, 26 Aug 2026 16:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;前言&lt;/h2&gt;
 &lt;p&gt;最近，我还是把我的博客从 Hexo 换回了 Astro。为什么是换回？这还得从我最初的博客说起。&lt;/p&gt;
 &lt;h2&gt;单 HTML 时期&lt;/h2&gt;
 &lt;p&gt;我以前一直都觉得，拥有自己的网站是很不错的事情。去年年初，DeepSeek 火了。去年年底，我开始用 DeepSeek 写代码。当时还不懂 Vue React 这类前端框架，只知道网页可以用 HTML 写，DeepSeek 网页版也可以直接预览，于是我便采用单 HTML 来开始制作我自己的博客。&lt;/p&gt;
