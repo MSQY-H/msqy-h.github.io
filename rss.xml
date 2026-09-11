@@ -51,7 +51,7 @@ export default defineConfig({
 &lt;p&gt;该方法不一定稳定，但能用。&lt;/p&gt;
 &lt;p&gt;配置完成后，配置 &lt;code&gt;.env&lt;/code&gt; 环境变量以进行本地调试。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
-INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+INDEXNOW_ENDPOINT=https://api.indexnow.org/indexnow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;如果不想公开密钥，那么千万不要把这个 .env 文件上传。&lt;/p&gt;
 &lt;blockquote&gt;
@@ -62,7 +62,7 @@ INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
 &lt;h4&gt;一般云平台&lt;/h4&gt;
 &lt;p&gt;直接在云平台的环境变量配置页面添加下面的变量即可。&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
-INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+INDEXNOW_ENDPOINT=https://api.indexnow.org/indexnow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;h4&gt;GitHub Pages&lt;/h4&gt;
 &lt;p&gt;对于使用 GitHub Actions 部署的 GitHub Pages，需要在 Actions 的配置文件添加一些内容。&lt;/p&gt;
@@ -81,7 +81,7 @@ INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;并打开 GitHub 项目，选择 &lt;code&gt;Settings&lt;/code&gt; &amp;gt; &lt;code&gt;Secrets and variables&lt;/code&gt; &amp;gt; &lt;code&gt;Actions&lt;/code&gt; &amp;gt; &lt;code&gt;Secrets&lt;/code&gt;，添加上面的变量：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;INDEXNOW_KEY=你的API密钥
-INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
+INDEXNOW_ENDPOINT=https://api.indexnow.org/indexnow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;最后执行部署操作。&lt;/p&gt;
 &lt;h3&gt;检查&lt;/h3&gt;
@@ -92,6 +92,8 @@ INDEXNOW_ENDPOINT=https://www.bing.com/indexnow
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;接着再前往 Bing Webmaster Tools 检查有没有刚刚提交的 url。&lt;/p&gt;
 &lt;p&gt;恭喜你，成功了！&lt;/p&gt;
+&lt;h2&gt;2026.9.11 更新&lt;/h2&gt;
+&lt;p&gt;原有建议的 &lt;code&gt;INDEXNOW_ENDPOINT&lt;/code&gt; 值似乎无法使用，已将该变量建议值改为可以使用的 &lt;code&gt;https://api.indexnow.org/indexnow&lt;/code&gt;。&lt;/p&gt;
 &lt;h2&gt;结尾&lt;/h2&gt;
 &lt;p&gt;在这篇文章，我们成功使用 astro-indexnow 插件为 Astro 博客设置自动向 Bing IndexNow 提交 url。以后每次构建，插件会自动提交 url，不用手动提交了！&lt;/p&gt;
 </content:encoded></item><item><title>用了两个月的 Hexo，还是换回 Astro：简述我的个人博客历程</title><link>https://msqy-h.github.io/posts/blog-history/</link><guid isPermaLink="true">https://msqy-h.github.io/posts/blog-history/</guid><description>介绍了我的个人博客历程：从单 HTML 到 Astro 再到 Hexo，最后回到 Astro</description><pubDate>Wed, 26 Aug 2026 16:00:00 GMT</pubDate><content:encoded>&lt;h2&gt;前言&lt;/h2&gt;
