@@ -263,39 +263,39 @@ if (document.readyState === 'loading') {
 <li>手</li>
 <li>手机或电脑</li>
 <li>网络</li>
-</ul></blockquote><p>下面以 <strong>GitHub</strong> 的开启为例</p><section><h3 id="1-选择你的-totp-应用">1. 选择你的 TOTP 应用<a class="anchor" href="#1-选择你的-totp-应用"><span class="anchor-icon" data-pagefind-ignore="">#</span></a></h3><p>这里建议使用<strong>开源</strong>的，这是因为开源的代码完全透明，一看就知道有没有后门。就算你看不懂代码，也会有大佬帮你看。</p><p>当然，不想那么麻烦，用 <strong>Google Authenticator</strong> 或 <strong>Microsoft Authenticator</strong> 也行。大厂产品，有保障。</p><p>我推荐 <strong>2FAS</strong>，这个APP完全开源，界面也不错，支持导入导出，苹果安卓都有。<a href="https://2fas.com/">官网传送门</a></p><a id="GCox1j6s-card" class="card-github fetch-waiting no-styling" href="https://github.com/twofas/2fas-pass-android" target="_blank" repo="twofas/2fas-pass-android"><div class="gc-titlebar"><div class="gc-titlebar-left"><div class="gc-owner"><div id="GCox1j6s-avatar" class="gc-avatar"></div><div class="gc-user">twofas</div></div><div class="gc-divider">/</div><div class="gc-repo">2fas-pass-android</div></div><div class="github-logo"></div></div><div id="GCox1j6s-description" class="gc-description">Waiting for api.github.com...</div><div class="gc-infobar"><div id="GCox1j6s-stars" class="gc-stars">00K</div><div id="GCox1j6s-forks" class="gc-forks">0K</div><div id="GCox1j6s-license" class="gc-license">0K</div><span id="GCox1j6s-language" class="gc-language">Waiting...</span></div><script id="GCox1j6s-script" type="text/javascript" defer>
+</ul></blockquote><p>下面以 <strong>GitHub</strong> 的开启为例</p><section><h3 id="1-选择你的-totp-应用">1. 选择你的 TOTP 应用<a class="anchor" href="#1-选择你的-totp-应用"><span class="anchor-icon" data-pagefind-ignore="">#</span></a></h3><p>这里建议使用<strong>开源</strong>的，这是因为开源的代码完全透明，一看就知道有没有后门。就算你看不懂代码，也会有大佬帮你看。</p><p>当然，不想那么麻烦，用 <strong>Google Authenticator</strong> 或 <strong>Microsoft Authenticator</strong> 也行。大厂产品，有保障。</p><p>我推荐 <strong>2FAS</strong>，这个APP完全开源，界面也不错，支持导入导出，苹果安卓都有。<a href="https://2fas.com/">官网传送门</a></p><a id="GCltfzwm-card" class="card-github fetch-waiting no-styling" href="https://github.com/twofas/2fas-pass-android" target="_blank" repo="twofas/2fas-pass-android"><div class="gc-titlebar"><div class="gc-titlebar-left"><div class="gc-owner"><div id="GCltfzwm-avatar" class="gc-avatar"></div><div class="gc-user">twofas</div></div><div class="gc-divider">/</div><div class="gc-repo">2fas-pass-android</div></div><div class="github-logo"></div></div><div id="GCltfzwm-description" class="gc-description">Waiting for api.github.com...</div><div class="gc-infobar"><div id="GCltfzwm-stars" class="gc-stars">00K</div><div id="GCltfzwm-forks" class="gc-forks">0K</div><div id="GCltfzwm-license" class="gc-license">0K</div><span id="GCltfzwm-language" class="gc-language">Waiting...</span></div><script id="GCltfzwm-script" type="text/javascript" defer>
       fetch('https://api.github.com/repos/twofas/2fas-pass-android', { referrerPolicy: "no-referrer" }).then(response => response.json()).then(data => {
-        document.getElementById('GCox1j6s-description').innerText = data.description?.replace(/:[a-zA-Z0-9_]+:/g, '') || "Description not set";
-        document.getElementById('GCox1j6s-language').innerText = data.language;
-        document.getElementById('GCox1j6s-forks').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.forks).replaceAll(" ", '');
-        document.getElementById('GCox1j6s-stars').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.stargazers_count).replaceAll(" ", '');
-        const avatarEl = document.getElementById('GCox1j6s-avatar');
+        document.getElementById('GCltfzwm-description').innerText = data.description?.replace(/:[a-zA-Z0-9_]+:/g, '') || "Description not set";
+        document.getElementById('GCltfzwm-language').innerText = data.language;
+        document.getElementById('GCltfzwm-forks').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.forks).replaceAll(" ", '');
+        document.getElementById('GCltfzwm-stars').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.stargazers_count).replaceAll(" ", '');
+        const avatarEl = document.getElementById('GCltfzwm-avatar');
         avatarEl.style.backgroundImage = 'url(' + data.owner.avatar_url + ')';
         avatarEl.style.backgroundColor = 'transparent';
-        document.getElementById('GCox1j6s-license').innerText = data.license?.spdx_id || "no-license";
-        document.getElementById('GCox1j6s-card').classList.remove("fetch-waiting");
-        console.log("[GITHUB-CARD] Loaded card for twofas/2fas-pass-android | GCox1j6s.")
+        document.getElementById('GCltfzwm-license').innerText = data.license?.spdx_id || "no-license";
+        document.getElementById('GCltfzwm-card').classList.remove("fetch-waiting");
+        console.log("[GITHUB-CARD] Loaded card for twofas/2fas-pass-android | GCltfzwm.")
       }).catch(err => {
-        const c = document.getElementById('GCox1j6s-card');
+        const c = document.getElementById('GCltfzwm-card');
         c?.classList.add("fetch-error");
-        console.warn("[GITHUB-CARD] (Error) Loading card for twofas/2fas-pass-android | GCox1j6s.")
+        console.warn("[GITHUB-CARD] (Error) Loading card for twofas/2fas-pass-android | GCltfzwm.")
       })
-    </script></a><a id="GCw4khou-card" class="card-github fetch-waiting no-styling" href="https://github.com/twofas/2fas-pass-ios" target="_blank" repo="twofas/2fas-pass-ios"><div class="gc-titlebar"><div class="gc-titlebar-left"><div class="gc-owner"><div id="GCw4khou-avatar" class="gc-avatar"></div><div class="gc-user">twofas</div></div><div class="gc-divider">/</div><div class="gc-repo">2fas-pass-ios</div></div><div class="github-logo"></div></div><div id="GCw4khou-description" class="gc-description">Waiting for api.github.com...</div><div class="gc-infobar"><div id="GCw4khou-stars" class="gc-stars">00K</div><div id="GCw4khou-forks" class="gc-forks">0K</div><div id="GCw4khou-license" class="gc-license">0K</div><span id="GCw4khou-language" class="gc-language">Waiting...</span></div><script id="GCw4khou-script" type="text/javascript" defer>
+    </script></a><a id="GCamthb9-card" class="card-github fetch-waiting no-styling" href="https://github.com/twofas/2fas-pass-ios" target="_blank" repo="twofas/2fas-pass-ios"><div class="gc-titlebar"><div class="gc-titlebar-left"><div class="gc-owner"><div id="GCamthb9-avatar" class="gc-avatar"></div><div class="gc-user">twofas</div></div><div class="gc-divider">/</div><div class="gc-repo">2fas-pass-ios</div></div><div class="github-logo"></div></div><div id="GCamthb9-description" class="gc-description">Waiting for api.github.com...</div><div class="gc-infobar"><div id="GCamthb9-stars" class="gc-stars">00K</div><div id="GCamthb9-forks" class="gc-forks">0K</div><div id="GCamthb9-license" class="gc-license">0K</div><span id="GCamthb9-language" class="gc-language">Waiting...</span></div><script id="GCamthb9-script" type="text/javascript" defer>
       fetch('https://api.github.com/repos/twofas/2fas-pass-ios', { referrerPolicy: "no-referrer" }).then(response => response.json()).then(data => {
-        document.getElementById('GCw4khou-description').innerText = data.description?.replace(/:[a-zA-Z0-9_]+:/g, '') || "Description not set";
-        document.getElementById('GCw4khou-language').innerText = data.language;
-        document.getElementById('GCw4khou-forks').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.forks).replaceAll(" ", '');
-        document.getElementById('GCw4khou-stars').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.stargazers_count).replaceAll(" ", '');
-        const avatarEl = document.getElementById('GCw4khou-avatar');
+        document.getElementById('GCamthb9-description').innerText = data.description?.replace(/:[a-zA-Z0-9_]+:/g, '') || "Description not set";
+        document.getElementById('GCamthb9-language').innerText = data.language;
+        document.getElementById('GCamthb9-forks').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.forks).replaceAll(" ", '');
+        document.getElementById('GCamthb9-stars').innerText = Intl.NumberFormat('en-us', { notation: "compact", maximumFractionDigits: 1 }).format(data.stargazers_count).replaceAll(" ", '');
+        const avatarEl = document.getElementById('GCamthb9-avatar');
         avatarEl.style.backgroundImage = 'url(' + data.owner.avatar_url + ')';
         avatarEl.style.backgroundColor = 'transparent';
-        document.getElementById('GCw4khou-license').innerText = data.license?.spdx_id || "no-license";
-        document.getElementById('GCw4khou-card').classList.remove("fetch-waiting");
-        console.log("[GITHUB-CARD] Loaded card for twofas/2fas-pass-ios | GCw4khou.")
+        document.getElementById('GCamthb9-license').innerText = data.license?.spdx_id || "no-license";
+        document.getElementById('GCamthb9-card').classList.remove("fetch-waiting");
+        console.log("[GITHUB-CARD] Loaded card for twofas/2fas-pass-ios | GCamthb9.")
       }).catch(err => {
-        const c = document.getElementById('GCw4khou-card');
+        const c = document.getElementById('GCamthb9-card');
         c?.classList.add("fetch-error");
-        console.warn("[GITHUB-CARD] (Error) Loading card for twofas/2fas-pass-ios | GCw4khou.")
+        console.warn("[GITHUB-CARD] (Error) Loading card for twofas/2fas-pass-ios | GCamthb9.")
       })
     </script></a><p>进到对应仓库下载即可。iOS 在 AppStore 下载。</p></section><section><h3 id="2-开启-github-的-2fa-验证">2. 开启 GitHub 的 2FA 验证<a class="anchor" href="#2-开启-github-的-2fa-验证"><span class="anchor-icon" data-pagefind-ignore="">#</span></a></h3><p>看到这，我默认你有 GitHub 帐号了。</p><ol>
 <li>打开 <a href="https://github.com/settings/security">GitHub 安全设置</a></li>
