@@ -728,7 +728,7 @@ pkg uninstall neovim
 &lt;h2&gt;小技巧&lt;/h2&gt;
 &lt;p&gt;如果用的是 Gboard，Termux 会将 Gboard 锁定为英文键盘，无法输入中文。&lt;/p&gt;
 &lt;p&gt;但是，如果向左滑动 Termux 的小键盘，小键盘就会变成输入框，现在就可以输入中文了，按回车即可将中文从输入框输入到命令行。&lt;/p&gt;
-&lt;p&gt;&lt;img src=&quot;/image/termux-neovim/slide.webp&quot; alt=&quot;向左滑动&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/images/termux-neovim/slide.webp&quot; alt=&quot;向左滑动&quot; /&gt;&lt;/p&gt;
 &lt;p&gt;另外，在左侧屏幕边缘向右滑动，可以滑出 Termux 侧边栏，可以添加新 session。&lt;/p&gt;
 &lt;p&gt;Termux 也真是的，把这些东西藏这么深，也不做个引导。&lt;/p&gt;
 &lt;h2&gt;结尾&lt;/h2&gt;
