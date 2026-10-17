@@ -3,39 +3,33 @@
 &lt;p&gt;这里使用 &lt;code&gt;DioNanos/codex-termux&lt;/code&gt; 项目，使用 &lt;code&gt;Bun&lt;/code&gt; 作为包管理器。:spoiler[你应该不知道 Termux 已经支持 Bun 了吧]&lt;/p&gt;
 &lt;p&gt;::github{repo=&quot;DioNanos/codex-termux&quot;}&lt;/p&gt;
 &lt;p&gt;如果没有安装 &lt;code&gt;Bun&lt;/code&gt;，先安装。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;bash
-pkg update
+&lt;pre&gt;&lt;code&gt;pkg update
 pkg upgrade -y
 pkg i bun
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;然后安装 &lt;code&gt;DioNanos/codex-termux&lt;/code&gt; 项目提供的 npm 包。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;bash
-bun install -g @mmmbuto/codex-cli-termux@latest --allow-scripts=@mmmbuto/codex-cli-termux
+&lt;pre&gt;&lt;code&gt;bun install -g @mmmbuto/codex-cli-termux@latest --allow-scripts=@mmmbuto/codex-cli-termux
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;似乎需要下载二进制包，可能需要比较久的时间。&lt;/p&gt;
 &lt;p&gt;根据项目的文档，Termux 需要安装 &lt;code&gt;ripgrep&lt;/code&gt;。（但是我这里不需要，可能是因为之前安装过了）&lt;/p&gt;
 &lt;blockquote&gt;
 &lt;p&gt;On Termux, also install ripgrep (the Android package resolves rg from PATH and does not bundle it):&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;pre&gt;&lt;code&gt;bash
-pkg install ripgrep
+&lt;pre&gt;&lt;code&gt;pkg install ripgrep
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;安装完成后，&lt;code&gt;bun&lt;/code&gt; 提示需要添加环境变量。（由于环境不同，你的提示可能与这个不同）&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;bash
-export PATH=&quot;/data/data/com.termux/files/home/.bun/bin:$PATH&quot;
+&lt;pre&gt;&lt;code&gt;export PATH=&quot;/data/data/com.termux/files/home/.bun/bin:$PATH&quot;
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;添加后即可使用。输入 &lt;code&gt;codex --version&lt;/code&gt; 验证。输出类似&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;codex-cli 0.162.1
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;即表明安装成功。需要注意的是，我们要将这一环境变量添加至 &lt;code&gt;.bashrc&lt;/code&gt; 或 &lt;code&gt;.zshrc&lt;/code&gt;，否则每次启动 Termux 都需要重新导入一遍环境变量。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;bash
-echo &apos;export PATH=&quot;/data/data/com.termux/files/home/.bun/bin:$PATH&quot;&apos; &amp;gt;&amp;gt; ~/.bashrc # 或 ~/.zshrc，注意 &apos;export ...&apos; 一句应替换为你的实际提示
+&lt;pre&gt;&lt;code&gt;echo &apos;export PATH=&quot;/data/data/com.termux/files/home/.bun/bin:$PATH&quot;&apos; &amp;gt;&amp;gt; ~/.bashrc # 或 ~/.zshrc，注意 &apos;export ...&apos; 一句应替换为你的实际提示
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;重启 Termux，输入 &lt;code&gt;codex --version&lt;/code&gt; 查看配置是否生效。&lt;/p&gt;
 &lt;h2&gt;配置模型&lt;/h2&gt;
 &lt;p&gt;新建或编辑 &lt;code&gt;~/.codex/models.json&lt;/code&gt;。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;json title=&quot;~/.codex/models.json&quot;
-{
+&lt;pre&gt;&lt;code&gt;{
   &quot;models&quot;: [
     {
       &quot;slug&quot;: &quot;glm-4.7-flash&quot;,
@@ -68,8 +62,7 @@ echo &apos;export PATH=&quot;/data/data/com.termux/files/home/.bun/bin:$PATH&quo
 }
 &lt;/code&gt;&lt;/pre&gt;
 &lt;p&gt;新建或编辑 &lt;code&gt;~/.codex/config.toml&lt;/code&gt;。&lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;toml title=&quot;~/.codex/config.toml&quot;
-model_provider = &quot;ZAI&quot;
+&lt;pre&gt;&lt;code&gt;model_provider = &quot;ZAI&quot;
 model = &quot;glm-4.7-flash&quot;
 model_reasoning_effort = &quot;max&quot;
 model_catalog_json = &quot;~/.codex/models.json&quot;
